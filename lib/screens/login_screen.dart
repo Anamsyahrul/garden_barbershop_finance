@@ -162,7 +162,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       border: Border.all(color: AppColors.line),
                     ),
                     child: const Text(
-                      'Demo: admin, capster, pemilik',
+                      'Demo: admin, senior, diva, pemilik',
                       style: TextStyle(
                         color: AppColors.muted,
                         fontSize: 12,

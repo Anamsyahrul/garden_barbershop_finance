@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:uuid/uuid.dart';
 
 import '../models/buku_kas_model.dart';
 import '../models/laporan_bulanan_model.dart';
@@ -135,7 +134,7 @@ class _LaporanScreenState extends State<LaporanScreen> {
 
     final lastSaldo = await firebase.getLastSaldo();
     final model = BukuKasModel(
-      idKas: 'K${const Uuid().v4().substring(0, 8)}',
+      idKas: 'K-PONDOK-${_bulan.text}',
       tanggal: _tanggalAkhirBulan(_bulan.text),
       uraian: 'Pendapatan usaha pondok bulan ${_bulan.text}',
       akun: 'Pendapatan Usaha',

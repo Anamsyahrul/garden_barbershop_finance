@@ -157,7 +157,15 @@ class FirebaseService {
     await init();
     if (_dummyMode) {
       _dummyCollections.putIfAbsent(collectionName, () => []);
-      _dummyCollections[collectionName]!.add(row);
+      final rows = _dummyCollections[collectionName]!;
+      final docId = _docIdFor(collectionName, row);
+      for (var i = 1; i < rows.length; i++) {
+        if (_docIdFor(collectionName, rows[i]) == docId) {
+          rows[i] = row;
+          return;
+        }
+      }
+      rows.add(row);
       return;
     }
     await _setFirestoreRow(collectionName, row);

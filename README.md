@@ -71,9 +71,17 @@ Langkah umum konfigurasi:
 android/app/google-services.json
 ```
 
-5. Aktifkan Cloud Firestore.
-6. Jalankan `flutter pub get`.
-7. Jalankan aplikasi dengan `flutter run`.
+5. Pastikan package name Android pada Firebase memakai:
+
+```text
+com.example.garden_barbershop_finance
+```
+
+6. Aktifkan Cloud Firestore.
+7. Jalankan `flutter pub get`.
+8. Jalankan aplikasi dengan `flutter run`.
+
+Plugin Google Services pada Android diterapkan otomatis hanya jika file `android/app/google-services.json` tersedia. Jika file tersebut belum ada, build tetap dapat berjalan dan aplikasi memakai dummy data.
 
 Catatan: untuk pengembangan skripsi, aturan Firestore dapat dibuat sementara sesuai kebutuhan pengujian. Untuk produksi, aturan akses harus dibatasi berdasarkan autentikasi dan role pengguna.
 
