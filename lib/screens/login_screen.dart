@@ -152,24 +152,6 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 12),
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: AppColors.panel,
-                      borderRadius: BorderRadius.circular(999),
-                      border: Border.all(color: AppColors.line),
-                    ),
-                    child: const Text(
-                      'Demo: admin, senior, diva, pemilik',
-                      style: TextStyle(
-                        color: AppColors.muted,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
                 ],
               ),
             ),
