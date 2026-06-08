@@ -29,7 +29,9 @@ class _CapsterScreenState extends State<CapsterScreen> {
   }
 
   void _refresh() {
-    setState(() => _future = FirebaseService.instance.getCapsters());
+    setState(() {
+      _future = FirebaseService.instance.getCapsters();
+    });
   }
 
   Future<void> _showForm({CapsterModel? data}) async {

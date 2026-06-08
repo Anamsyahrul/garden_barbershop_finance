@@ -30,7 +30,9 @@ class _AkunPenggunaScreenState extends State<AkunPenggunaScreen> {
   }
 
   void _refresh() {
-    setState(() => _future = FirebaseService.instance.getUsers());
+    setState(() {
+      _future = FirebaseService.instance.getUsers();
+    });
   }
 
   Future<void> _showForm({UserModel? data}) async {
@@ -117,12 +119,11 @@ class _AkunPenggunaScreenState extends State<AkunPenggunaScreen> {
                           .toList(),
                       onChanged: (value) =>
                           setDialogState(() => selectedCapsterId = value),
-                      validator: (value) =>
-                          (role == UserRole.capster ||
-                                      role == UserRole.adminHarian) &&
-                                  value == null
-                              ? 'Nama capster wajib dipilih'
-                              : null,
+                      validator: (value) => (role == UserRole.capster ||
+                                  role == UserRole.adminHarian) &&
+                              value == null
+                          ? 'Nama capster wajib dipilih'
+                          : null,
                     ),
                     const SizedBox(height: 12),
                   ],
@@ -150,8 +151,7 @@ class _AkunPenggunaScreenState extends State<AkunPenggunaScreen> {
               onPressed: () async {
                 if (!formKey.currentState!.validate()) return;
                 final normalizedUsername = username.text.trim().toLowerCase();
-                final existingUsers =
-                    await FirebaseService.instance.getUsers();
+                final existingUsers = await FirebaseService.instance.getUsers();
                 final usernameUsed = existingUsers.any(
                   (item) =>
                       item.username.toLowerCase() == normalizedUsername &&
@@ -175,10 +175,10 @@ class _AkunPenggunaScreenState extends State<AkunPenggunaScreen> {
                     name: name.text.trim(),
                     role: role,
                     status: status,
-                    idCapster: role == UserRole.capster ||
-                            role == UserRole.adminHarian
-                        ? selectedCapsterId ?? ''
-                        : '',
+                    idCapster:
+                        role == UserRole.capster || role == UserRole.adminHarian
+                            ? selectedCapsterId ?? ''
+                            : '',
                   );
                   if (data == null) {
                     await FirebaseService.instance.saveUser(model);

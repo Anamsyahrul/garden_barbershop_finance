@@ -90,7 +90,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
       bottomNavigationBar:
           const AppBottomNav(currentRoute: DashboardScreen.routeName),
       body: RefreshIndicator(
-        onRefresh: () async => setState(() => _future = _load()),
+        onRefresh: () async {
+          setState(() {
+            _future = _load();
+          });
+          await _future;
+        },
         child: FutureBuilder<_DashboardData>(
           future: _future,
           builder: (context, snapshot) {
@@ -130,9 +135,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         SizedBox(
                           width: itemWidth,
                           child: CompactMetricCard(
-                            title: personalView
-                                ? 'Akun Capster'
-                                : 'Capster Aktif',
+                            title:
+                                personalView ? 'Akun Capster' : 'Capster Aktif',
                             value: personalView
                                 ? (data.user?.name ?? '-')
                                 : '${data.jumlahCapsterAktif} orang',
@@ -143,9 +147,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         SizedBox(
                           width: itemWidth,
                           child: CompactMetricCard(
-                            title: personalView
-                                ? 'Bagian Saya'
-                                : 'Bagian Pondok',
+                            title:
+                                personalView ? 'Bagian Saya' : 'Bagian Pondok',
                             value: CurrencyFormatter.format(
                               personalView
                                   ? data.totalBagianCapster
@@ -173,7 +176,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       ),
                     ),
                     TextButton.icon(
-                      onPressed: () => setState(() => _future = _load()),
+                      onPressed: () {
+                        setState(() {
+                          _future = _load();
+                        });
+                      },
                       icon: const Icon(Icons.refresh, size: 18),
                       label: const Text('Refresh'),
                     ),
@@ -317,7 +324,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
                 IconButton(
                   tooltip: 'Refresh',
-                  onPressed: () => setState(() => _future = _load()),
+                  onPressed: () {
+                    setState(() {
+                      _future = _load();
+                    });
+                  },
                   icon: const Icon(Icons.refresh),
                 ),
               ],

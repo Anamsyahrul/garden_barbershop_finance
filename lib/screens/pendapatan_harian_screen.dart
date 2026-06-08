@@ -110,8 +110,9 @@ class _PendapatanHarianScreenState extends State<PendapatanHarianScreen> {
   }
 
   void _refreshPendapatan() {
-    setState(() =>
-        _pendapatanFuture = FirebaseService.instance.getPendapatanHarian());
+    setState(() {
+      _pendapatanFuture = FirebaseService.instance.getPendapatanHarian();
+    });
   }
 
   void _clearForm() {

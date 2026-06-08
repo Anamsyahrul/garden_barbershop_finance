@@ -61,8 +61,9 @@ class _OperasionalScreenState extends State<OperasionalScreen> {
   }
 
   void _refreshList() {
-    setState(() => _future =
-        FirebaseService.instance.getOperasionalByMonth(_bulan.text));
+    setState(() {
+      _future = FirebaseService.instance.getOperasionalByMonth(_bulan.text);
+    });
   }
 
   Future<void> _loadTotal() async {

@@ -31,7 +31,9 @@ class _LayananScreenState extends State<LayananScreen> {
   }
 
   void _refresh() {
-    setState(() => _future = FirebaseService.instance.getLayanan());
+    setState(() {
+      _future = FirebaseService.instance.getLayanan();
+    });
   }
 
   Future<void> _showForm({LayananModel? data}) async {

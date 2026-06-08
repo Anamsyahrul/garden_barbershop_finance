@@ -66,7 +66,9 @@ class _BukuKasScreenState extends State<BukuKasScreen> {
   }
 
   void _refresh() {
-    setState(() => _future = FirebaseService.instance.getBukuKas());
+    setState(() {
+      _future = FirebaseService.instance.getBukuKas();
+    });
   }
 
   Future<void> _updateSaldoPreview() async {
