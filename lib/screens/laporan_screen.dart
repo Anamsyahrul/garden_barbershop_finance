@@ -112,7 +112,7 @@ class _LaporanScreenState extends State<LaporanScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
-            'Laporan dan pendapatan usaha pondok berhasil disimpan',
+            'Laporan tersimpan. Bagian pondok otomatis masuk ke kas umum',
           ),
         ),
       );
@@ -132,18 +132,20 @@ class _LaporanScreenState extends State<LaporanScreen> {
         _laporan.fold(0, (total, item) => total + item.bagianPondok);
     if (totalBagianPondok <= 0) return;
 
-    final lastSaldo = await firebase.getLastSaldo();
+    final idKas = 'K-PONDOK-${_bulan.text}';
+    final tanggal = _tanggalAkhirBulan(_bulan.text);
+    final saldoSebelumnya = await firebase.getSaldoSebelumKas(tanggal, idKas);
     final model = BukuKasModel(
-      idKas: 'K-PONDOK-${_bulan.text}',
-      tanggal: _tanggalAkhirBulan(_bulan.text),
+      idKas: idKas,
+      tanggal: tanggal,
       uraian: 'Pendapatan usaha pondok bulan ${_bulan.text}',
       akun: 'Pendapatan Usaha',
       penerimaan: totalBagianPondok,
       pengeluaran: 0,
-      saldo: lastSaldo + totalBagianPondok,
+      saldo: saldoSebelumnya + totalBagianPondok,
       keterangan: 'Otomatis dari bagian pondok pada laporan pembagian hasil',
     );
-    await firebase.saveBukuKas(model);
+    await firebase.upsertBukuKas(model);
   }
 
   String _tanggalAkhirBulan(String bulan) {

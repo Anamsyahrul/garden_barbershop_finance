@@ -198,7 +198,8 @@ class FirebaseService {
     final rows = await readRows(collectionName);
     final index = rowNumber - 1;
     if (index > 0 && index < rows.length) {
-      await _deleteByDocumentId(collectionName, _docIdFor(collectionName, rows[index]));
+      await _deleteByDocumentId(
+          collectionName, _docIdFor(collectionName, rows[index]));
     }
   }
 
@@ -206,6 +207,17 @@ class FirebaseService {
     final data = await getBukuKas();
     if (data.isEmpty) return 0;
     return data.last.saldo;
+  }
+
+  Future<int> getSaldoSebelumKas(String tanggal, String idKas) async {
+    final data = await getBukuKas();
+    final sorted = data
+        .where((item) => item.idKas != idKas)
+        .where((item) =>
+            '${item.tanggal}_${item.idKas}'.compareTo('${tanggal}_$idKas') < 0)
+        .toList();
+    if (sorted.isEmpty) return 0;
+    return sorted.last.saldo;
   }
 
   Future<List<CapsterModel>> getCapsterAktif() {
@@ -301,12 +313,17 @@ class FirebaseService {
   Future<List<BukuKasModel>> getBukuKas() async {
     final rows = await readRows('buku_kas_umum');
     final data = rows.skip(1).map(BukuKasModel.fromRow).toList();
-    data.sort((a, b) => '${a.tanggal}_${a.idKas}'.compareTo('${b.tanggal}_${b.idKas}'));
+    data.sort((a, b) =>
+        '${a.tanggal}_${a.idKas}'.compareTo('${b.tanggal}_${b.idKas}'));
     return data;
   }
 
   Future<void> saveBukuKas(BukuKasModel model) {
     return appendRow('buku_kas_umum', model.toRow());
+  }
+
+  Future<void> upsertBukuKas(BukuKasModel model) {
+    return _updateById('buku_kas_umum', model.idKas, model.toRow());
   }
 
   Future<void> deleteBukuKas(String idKas) {
@@ -433,9 +450,13 @@ class FirebaseService {
       return '${bulan}_$idCapster';
     }
     if (collectionName == 'rekap_customer') {
-      return row.isNotEmpty ? row[0].toString() : DateTime.now().microsecondsSinceEpoch.toString();
+      return row.isNotEmpty
+          ? row[0].toString()
+          : DateTime.now().microsecondsSinceEpoch.toString();
     }
-    return row.isNotEmpty ? row[0].toString() : DateTime.now().microsecondsSinceEpoch.toString();
+    return row.isNotEmpty
+        ? row[0].toString()
+        : DateTime.now().microsecondsSinceEpoch.toString();
   }
 
   String _sortKey(String collectionName, List<dynamic> row) {
@@ -445,7 +466,8 @@ class FirebaseService {
       final id = row.isNotEmpty ? row[0].toString() : '';
       return '${tanggal}_$id';
     }
-    if (collectionName == 'operasional' || collectionName == 'laporan_bulanan') {
+    if (collectionName == 'operasional' ||
+        collectionName == 'laporan_bulanan') {
       return row.isNotEmpty ? row[0].toString() : '';
     }
     return row.isNotEmpty ? row[0].toString() : '';
@@ -480,7 +502,14 @@ class FirebaseService {
       ['L007', 'CH', 'Coloring Hair', 50000, 'Tambahan', 'aktif'],
       ['L008', 'HS', 'Home Service', 35000, 'Tambahan', 'aktif'],
       ['L009', 'PR', 'Perming', 0, 'Tambahan', 'aktif'],
-      ['L010', 'KM', 'Kartu Member / Cukur Gratis Member', 0, 'Member', 'aktif'],
+      [
+        'L010',
+        'KM',
+        'Kartu Member / Cukur Gratis Member',
+        0,
+        'Member',
+        'aktif'
+      ],
     ];
     _dummyCollections['pendapatan_harian'] = [
       _headers['pendapatan_harian']!,
@@ -622,17 +651,55 @@ class FirebaseService {
       _headers['operasional']!,
       ['O001', '2026-05', 'Wifi', 'Wifi', 291400, 'Biaya wifi Mei'],
       ['O002', '2026-05', 'Listrik', 'Listrik', 1130720, 'Biaya listrik Mei'],
-      ['O003', '2026-05', 'Kebersihan', 'Kebersihan', 15000, 'Biaya kebersihan'],
-      ['O004', '2026-05', 'Perlengkapan', 'Harga Pokok Penjualan', 142500, 'Perlengkapan cukur'],
+      [
+        'O003',
+        '2026-05',
+        'Kebersihan',
+        'Kebersihan',
+        15000,
+        'Biaya kebersihan'
+      ],
+      [
+        'O004',
+        '2026-05',
+        'Perlengkapan',
+        'Harga Pokok Penjualan',
+        142500,
+        'Perlengkapan cukur'
+      ],
     ];
     _dummyCollections['laporan_bulanan'] = [_headers['laporan_bulanan']!];
     _dummyCollections['rekap_customer'] = [_headers['rekap_customer']!];
     _dummyCollections['users'] = [
       _headers['users']!,
       ['UADMIN', 'admin', 'admin123', 'Admin Garden', 'admin', 'aktif', ''],
-      ['U001', 'diva', 'capster123', 'Muhamad Diva Syarri', 'capster', 'aktif', 'C001'],
-      ['U002', 'pemilik', 'pemilik123', 'Pemilik Pondok', 'pemilik', 'aktif', ''],
-      ['U003', 'senior', 'senior123', 'Capster Senior', 'adminHarian', 'aktif', 'C002'],
+      [
+        'U001',
+        'diva',
+        'capster123',
+        'Muhamad Diva Syarri',
+        'capster',
+        'aktif',
+        'C001'
+      ],
+      [
+        'U002',
+        'pemilik',
+        'pemilik123',
+        'Pemilik Pondok',
+        'pemilik',
+        'aktif',
+        ''
+      ],
+      [
+        'U003',
+        'senior',
+        'senior123',
+        'Capster Senior',
+        'adminHarian',
+        'aktif',
+        'C002'
+      ],
     ];
   }
 }
