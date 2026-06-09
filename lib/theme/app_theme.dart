@@ -1,20 +1,20 @@
 import 'package:flutter/material.dart';
 
 class AppColors {
-  static const ink = Color(0xFF050816);
-  static const panel = Color(0xFF0F172A);
-  static const charcoal = Color(0xFFF8FAFC);
-  static const charcoalSoft = Color(0xFFCBD5E1);
-  static const teal = Color(0xFF2DD4BF);
-  static const tealDark = Color(0xFF5EEAD4);
-  static const mint = Color(0xFF123733);
-  static const brass = Color(0xFFFBBF24);
-  static const brassSoft = Color(0xFF3A2B12);
-  static const linen = Color(0xFF0B1120);
-  static const paper = Color(0xFF111827);
-  static const line = Color(0xFF263244);
-  static const muted = Color(0xFF94A3B8);
-  static const danger = Color(0xFFF87171);
+  static const ink = Color(0xFF17212B);
+  static const panel = Color(0xFFF8FAFC);
+  static const charcoal = Color(0xFF17212B);
+  static const charcoalSoft = Color(0xFF475569);
+  static const teal = Color(0xFF0F9F8F);
+  static const tealDark = Color(0xFF0B756C);
+  static const mint = Color(0xFFE3F7F2);
+  static const brass = Color(0xFFC18A2B);
+  static const brassSoft = Color(0xFFFFF4D6);
+  static const linen = Color(0xFFF3F6F8);
+  static const paper = Color(0xFFFFFFFF);
+  static const line = Color(0xFFE1E7EC);
+  static const muted = Color(0xFF64748B);
+  static const danger = Color(0xFFDC2626);
 }
 
 class AppTheme {
@@ -25,7 +25,7 @@ class AppTheme {
       secondary: AppColors.brass,
       surface: AppColors.paper,
       background: AppColors.linen,
-      brightness: Brightness.dark,
+      brightness: Brightness.light,
     );
 
     return ThemeData(
@@ -35,14 +35,15 @@ class AppTheme {
       fontFamily: 'Roboto',
       appBarTheme: const AppBarTheme(
         centerTitle: false,
-        elevation: 0,
+        elevation: 1,
         scrolledUnderElevation: 0,
         toolbarHeight: 60,
-        foregroundColor: Colors.white,
-        backgroundColor: AppColors.ink,
-        iconTheme: IconThemeData(color: Colors.white),
+        foregroundColor: AppColors.charcoal,
+        backgroundColor: AppColors.paper,
+        surfaceTintColor: Colors.transparent,
+        iconTheme: IconThemeData(color: AppColors.charcoal),
         titleTextStyle: TextStyle(
-          color: Colors.white,
+          color: AppColors.charcoal,
           fontSize: 18,
           fontWeight: FontWeight.w800,
           letterSpacing: 0,
@@ -50,8 +51,8 @@ class AppTheme {
       ),
       cardTheme: CardThemeData(
         color: AppColors.paper,
-        elevation: 0,
-        shadowColor: Colors.black38,
+        elevation: 1.5,
+        shadowColor: Colors.black12,
         margin: EdgeInsets.zero,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(8),
@@ -83,7 +84,7 @@ class AppTheme {
           borderSide: const BorderSide(color: AppColors.teal, width: 1.5),
         ),
         filled: true,
-        fillColor: AppColors.panel,
+        fillColor: AppColors.paper,
         contentPadding:
             const EdgeInsets.symmetric(horizontal: 14, vertical: 15),
         labelStyle: const TextStyle(color: AppColors.muted),
@@ -102,7 +103,7 @@ class AppTheme {
         style: OutlinedButton.styleFrom(
           foregroundColor: AppColors.charcoal,
           minimumSize: const Size.fromHeight(52),
-          side: const BorderSide(color: AppColors.line),
+          side: const BorderSide(color: AppColors.teal),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
           textStyle: const TextStyle(fontWeight: FontWeight.w700),
         ),
@@ -126,7 +127,7 @@ class AppTheme {
       ),
       snackBarTheme: SnackBarThemeData(
         behavior: SnackBarBehavior.floating,
-        backgroundColor: AppColors.panel,
+        backgroundColor: AppColors.ink,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
       navigationBarTheme: NavigationBarThemeData(

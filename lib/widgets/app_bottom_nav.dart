@@ -33,7 +33,7 @@ class AppBottomNav extends StatelessWidget {
           selectedIndex: _currentIndex(items),
           backgroundColor: AppColors.paper,
           indicatorColor: AppColors.mint,
-          elevation: 3,
+          elevation: 2,
           labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
           onDestinationSelected: (index) {
             final route = items[index].route;

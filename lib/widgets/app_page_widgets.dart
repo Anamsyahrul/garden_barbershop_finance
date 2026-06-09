@@ -17,16 +17,16 @@ class AppPageHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.panel,
+        color: AppColors.paper,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: AppColors.brass.withValues(alpha: 0.35)),
+        border: Border.all(color: AppColors.line),
         boxShadow: [
           BoxShadow(
-            color: AppColors.ink.withValues(alpha: 0.35),
+            color: AppColors.ink.withValues(alpha: 0.07),
             blurRadius: 18,
-            offset: const Offset(0, 8),
+            offset: const Offset(0, 10),
           ),
         ],
       ),
@@ -37,7 +37,7 @@ class AppPageHeader extends StatelessWidget {
             bottom: -10,
             child: Icon(
               icon,
-              color: Colors.white.withValues(alpha: 0.06),
+              color: AppColors.teal.withValues(alpha: 0.06),
               size: 78,
             ),
           ),
@@ -47,12 +47,11 @@ class AppPageHeader extends StatelessWidget {
                 width: 42,
                 height: 42,
                 decoration: BoxDecoration(
-                  color: AppColors.teal,
+                  color: AppColors.mint,
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                      color: AppColors.brass.withValues(alpha: 0.85)),
+                  border: Border.all(color: AppColors.teal),
                 ),
-                child: Icon(icon, color: Colors.white),
+                child: Icon(icon, color: AppColors.tealDark),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -62,7 +61,7 @@ class AppPageHeader extends StatelessWidget {
                     Text(
                       title,
                       style: const TextStyle(
-                        color: Colors.white,
+                        color: AppColors.charcoal,
                         fontSize: 17,
                         fontWeight: FontWeight.w900,
                       ),
@@ -71,7 +70,7 @@ class AppPageHeader extends StatelessWidget {
                     Text(
                       subtitle,
                       style: const TextStyle(
-                        color: Color(0xFFD1D5DB),
+                        color: AppColors.muted,
                         fontSize: 12,
                         height: 1.35,
                       ),

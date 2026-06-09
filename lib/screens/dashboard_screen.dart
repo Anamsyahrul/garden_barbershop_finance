@@ -306,11 +306,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   width: 38,
                   height: 38,
                   decoration: BoxDecoration(
-                    color: AppColors.panel,
+                    color: AppColors.mint,
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: const Icon(Icons.content_cut,
-                      color: AppColors.brass, size: 21),
+                      color: AppColors.tealDark, size: 21),
                 ),
                 const SizedBox(width: 10),
                 const Expanded(
@@ -339,7 +339,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ? 'Dashboard'
                   : '${data.user!.name} • ${data.user!.role.label}',
               style: const TextStyle(
-                color: AppColors.brass,
+                color: AppColors.tealDark,
                 fontSize: 12,
                 fontWeight: FontWeight.w800,
               ),
@@ -418,7 +418,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         width: 34,
         height: 34,
         decoration: BoxDecoration(
-          color: AppColors.panel,
+          color: AppColors.teal,
           borderRadius: BorderRadius.circular(8),
         ),
         child: const Icon(Icons.arrow_forward, color: Colors.white, size: 18),

@@ -399,12 +399,20 @@ class _PendapatanHarianScreenState extends State<PendapatanHarianScreen> {
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: AppColors.panel,
+        color: AppColors.paper,
         borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: AppColors.line),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.ink.withValues(alpha: 0.06),
+            blurRadius: 16,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
       child: const Row(
         children: [
-          Icon(Icons.receipt_long, color: AppColors.brass, size: 30),
+          Icon(Icons.receipt_long, color: AppColors.teal, size: 30),
           SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -413,7 +421,7 @@ class _PendapatanHarianScreenState extends State<PendapatanHarianScreen> {
                 Text(
                   'Input Pendapatan Harian',
                   style: TextStyle(
-                    color: Colors.white,
+                    color: AppColors.charcoal,
                     fontSize: 18,
                     fontWeight: FontWeight.w800,
                   ),
@@ -421,7 +429,7 @@ class _PendapatanHarianScreenState extends State<PendapatanHarianScreen> {
                 SizedBox(height: 4),
                 Text(
                   'Catat layanan capster dan customer harian Garden Barbershop.',
-                  style: TextStyle(color: Colors.white70, height: 1.35),
+                  style: TextStyle(color: AppColors.muted, height: 1.35),
                 ),
               ],
             ),
@@ -492,7 +500,7 @@ class _PendapatanHarianScreenState extends State<PendapatanHarianScreen> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppColors.panel,
+        color: AppColors.paper,
         border: Border.all(color: AppColors.line),
         borderRadius: BorderRadius.circular(8),
       ),
@@ -588,12 +596,12 @@ class _PendapatanHarianScreenState extends State<PendapatanHarianScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.panel,
+        color: AppColors.paper,
         borderRadius: BorderRadius.circular(10),
         border: Border.all(color: AppColors.line),
         boxShadow: [
           BoxShadow(
-            color: AppColors.ink.withValues(alpha: 0.22),
+            color: AppColors.ink.withValues(alpha: 0.06),
             blurRadius: 18,
             offset: const Offset(0, 8),
           ),
@@ -665,7 +673,7 @@ class _PendapatanHarianScreenState extends State<PendapatanHarianScreen> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppColors.panel,
+        color: AppColors.paper,
         border: Border.all(color: AppColors.line),
         borderRadius: BorderRadius.circular(8),
       ),

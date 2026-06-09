@@ -27,7 +27,7 @@ void main() {
   testWidgets('menampilkan halaman login', (WidgetTester tester) async {
     await tester.pumpWidget(const GardenFinanceApp());
 
-    expect(find.text('Garden Finance'), findsOneWidget);
+    expect(find.text('Garden Barbershop Finance'), findsOneWidget);
     expect(find.text('Masuk'), findsWidgets);
   });
 

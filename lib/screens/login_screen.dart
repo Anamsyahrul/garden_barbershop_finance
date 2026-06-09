@@ -49,7 +49,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.ink,
+      backgroundColor: AppColors.linen,
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -63,21 +63,38 @@ class _LoginScreenState extends State<LoginScreen> {
                     width: 62,
                     height: 62,
                     decoration: BoxDecoration(
-                      color: AppColors.panel,
+                      color: AppColors.paper,
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: AppColors.teal, width: 1.4),
+                      border: Border.all(color: AppColors.line),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.ink.withValues(alpha: 0.08),
+                          blurRadius: 16,
+                          offset: const Offset(0, 8),
+                        ),
+                      ],
                     ),
                     child: const Icon(Icons.content_cut,
-                        size: 34, color: AppColors.brass),
+                        size: 34, color: AppColors.tealDark),
                   ),
                   const SizedBox(height: 16),
                   const Text(
-                    'Garden Finance',
+                    'Garden Barbershop Finance',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: AppColors.charcoal,
-                      fontSize: 26,
+                      fontSize: 24,
                       fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  const Text(
+                    'Pengelolaan pendapatan dan pembagian hasil',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: AppColors.muted,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                   const SizedBox(height: 22),

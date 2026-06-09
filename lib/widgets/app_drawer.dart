@@ -30,7 +30,12 @@ class AppDrawer extends StatelessWidget {
               children: [
                 Container(
                   padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
-                  color: AppColors.panel,
+                  decoration: const BoxDecoration(
+                    color: AppColors.paper,
+                    border: Border(
+                      bottom: BorderSide(color: AppColors.line),
+                    ),
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -39,7 +44,7 @@ class AppDrawer extends StatelessWidget {
                       const Text(
                         'Garden Barbershop',
                         style: TextStyle(
-                          color: Colors.white,
+                          color: AppColors.charcoal,
                           fontSize: 18,
                           fontWeight: FontWeight.w800,
                         ),
@@ -50,7 +55,7 @@ class AppDrawer extends StatelessWidget {
                             ? 'Finance Control'
                             : '${user.name} • ${role.label}',
                         style: const TextStyle(
-                          color: AppColors.brass,
+                          color: AppColors.tealDark,
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
                         ),
@@ -117,7 +122,7 @@ class AppDrawer extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
       child: ListTile(
         selected: selected,
-        selectedTileColor: AppColors.linen,
+        selectedTileColor: AppColors.mint,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         leading:
             Icon(icon, color: selected ? AppColors.tealDark : AppColors.teal),
@@ -139,11 +144,11 @@ class _BrandMark extends StatelessWidget {
       width: size,
       height: size,
       decoration: BoxDecoration(
-        color: AppColors.teal,
+        color: AppColors.mint,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: AppColors.brass, width: 1.5),
+        border: Border.all(color: AppColors.teal, width: 1.5),
       ),
-      child: const Icon(Icons.content_cut, color: Colors.white, size: 28),
+      child: const Icon(Icons.content_cut, color: AppColors.tealDark, size: 28),
     );
   }
 }
