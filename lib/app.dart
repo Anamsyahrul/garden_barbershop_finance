@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'screens/buku_kas_screen.dart';
 import 'screens/akun_pengguna_screen.dart';
@@ -23,6 +24,13 @@ class GardenFinanceApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Garden Barbershop Finance',
       theme: AppTheme.light(),
+      locale: const Locale('id', 'ID'),
+      supportedLocales: const [Locale('id', 'ID')],
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
       initialRoute: LoginScreen.routeName,
       routes: {
         LoginScreen.routeName: (_) => const LoginScreen(),

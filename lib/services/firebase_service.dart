@@ -9,6 +9,7 @@ import '../models/operasional_model.dart';
 import '../models/pendapatan_harian_model.dart';
 import '../models/user_model.dart';
 import '../models/user_role.dart';
+import '../utils/date_formatter.dart';
 
 class FirebaseService {
   FirebaseService._();
@@ -210,11 +211,14 @@ class FirebaseService {
   }
 
   Future<int> getSaldoSebelumKas(String tanggal, String idKas) async {
+    final tanggalKey = DateFormatter.toStorageDate(tanggal);
     final data = await getBukuKas();
     final sorted = data
         .where((item) => item.idKas != idKas)
         .where((item) =>
-            '${item.tanggal}_${item.idKas}'.compareTo('${tanggal}_$idKas') < 0)
+            '${DateFormatter.toStorageDate(item.tanggal)}_${item.idKas}'
+                .compareTo('${tanggalKey}_$idKas') <
+            0)
         .toList();
     if (sorted.isEmpty) return 0;
     return sorted.last.saldo;
@@ -229,16 +233,18 @@ class FirebaseService {
   }
 
   Future<List<PendapatanHarianModel>> getPendapatanByMonth(String bulan) async {
+    final monthKey = DateFormatter.toStorageMonth(bulan);
     final rows = await readRows('pendapatan_harian');
     return rows.skip(1).map(PendapatanHarianModel.fromRow).where((item) {
-      return item.tanggal.startsWith(bulan);
+      return DateFormatter.toStorageDate(item.tanggal).startsWith(monthKey);
     }).toList();
   }
 
   Future<List<OperasionalModel>> getOperasionalByMonth(String bulan) async {
+    final monthKey = DateFormatter.toStorageMonth(bulan);
     final rows = await readRows('operasional');
     return rows.skip(1).map(OperasionalModel.fromRow).where((item) {
-      return item.bulan == bulan;
+      return DateFormatter.toStorageMonth(item.bulan) == monthKey;
     }).toList();
   }
 
@@ -313,8 +319,8 @@ class FirebaseService {
   Future<List<BukuKasModel>> getBukuKas() async {
     final rows = await readRows('buku_kas_umum');
     final data = rows.skip(1).map(BukuKasModel.fromRow).toList();
-    data.sort((a, b) =>
-        '${a.tanggal}_${a.idKas}'.compareTo('${b.tanggal}_${b.idKas}'));
+    data.sort((a, b) => '${DateFormatter.toStorageDate(a.tanggal)}_${a.idKas}'
+        .compareTo('${DateFormatter.toStorageDate(b.tanggal)}_${b.idKas}'));
     return data;
   }
 
@@ -462,7 +468,8 @@ class FirebaseService {
   String _sortKey(String collectionName, List<dynamic> row) {
     if (collectionName == 'pendapatan_harian' ||
         collectionName == 'buku_kas_umum') {
-      final tanggal = row.length > 1 ? row[1].toString() : '';
+      final tanggal =
+          row.length > 1 ? DateFormatter.toStorageDate(row[1].toString()) : '';
       final id = row.isNotEmpty ? row[0].toString() : '';
       return '${tanggal}_$id';
     }

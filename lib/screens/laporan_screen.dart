@@ -50,11 +50,12 @@ class _LaporanScreenState extends State<LaporanScreen> {
     try {
       final firebase = FirebaseService.instance;
       final user = await AuthService().currentUser();
+      final bulanKey = DateFormatter.toStorageMonth(_bulan.text);
       final capster = await firebase.getCapsterAktif();
-      final pendapatan = await firebase.getPendapatanByMonth(_bulan.text);
-      final operasional = await firebase.getOperasionalByMonth(_bulan.text);
+      final pendapatan = await firebase.getPendapatanByMonth(bulanKey);
+      final operasional = await firebase.getOperasionalByMonth(bulanKey);
       var laporan = CalculationService().generateLaporanBulanan(
-        bulan: _bulan.text,
+        bulan: bulanKey,
         capsterAktif: capster,
         pendapatan: pendapatan,
         operasional: operasional,
@@ -132,13 +133,15 @@ class _LaporanScreenState extends State<LaporanScreen> {
         _laporan.fold(0, (total, item) => total + item.bagianPondok);
     if (totalBagianPondok <= 0) return;
 
-    final idKas = 'K-PONDOK-${_bulan.text}';
-    final tanggal = _tanggalAkhirBulan(_bulan.text);
+    final bulanKey = DateFormatter.toStorageMonth(_bulan.text);
+    final idKas = 'K-PONDOK-$bulanKey';
+    final tanggal = _tanggalAkhirBulan(bulanKey);
     final saldoSebelumnya = await firebase.getSaldoSebelumKas(tanggal, idKas);
     final model = BukuKasModel(
       idKas: idKas,
       tanggal: tanggal,
-      uraian: 'Pendapatan usaha pondok bulan ${_bulan.text}',
+      uraian:
+          'Pendapatan usaha pondok bulan ${DateFormatter.displayMonth(bulanKey)}',
       akun: 'Pendapatan Usaha',
       penerimaan: totalBagianPondok,
       pengeluaran: 0,
@@ -150,13 +153,13 @@ class _LaporanScreenState extends State<LaporanScreen> {
 
   String _tanggalAkhirBulan(String bulan) {
     final parts = bulan.split('-');
-    if (parts.length != 2) return DateFormatter.formatDate(DateTime.now());
+    if (parts.length != 2) return DateFormatter.formatDateKey(DateTime.now());
     final year = int.tryParse(parts[0]);
     final month = int.tryParse(parts[1]);
     if (year == null || month == null) {
-      return DateFormatter.formatDate(DateTime.now());
+      return DateFormatter.formatDateKey(DateTime.now());
     }
-    return DateFormatter.formatDate(DateTime(year, month + 1, 0));
+    return DateFormatter.formatDateKey(DateTime(year, month + 1, 0));
   }
 
   @override

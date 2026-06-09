@@ -47,7 +47,8 @@ class _OperasionalScreenState extends State<OperasionalScreen> {
   @override
   void initState() {
     super.initState();
-    _future = FirebaseService.instance.getOperasionalByMonth(_bulan.text);
+    _future = FirebaseService.instance
+        .getOperasionalByMonth(DateFormatter.toStorageMonth(_bulan.text));
     _loadTotal();
   }
 
@@ -62,13 +63,14 @@ class _OperasionalScreenState extends State<OperasionalScreen> {
 
   void _refreshList() {
     setState(() {
-      _future = FirebaseService.instance.getOperasionalByMonth(_bulan.text);
+      _future = FirebaseService.instance
+          .getOperasionalByMonth(DateFormatter.toStorageMonth(_bulan.text));
     });
   }
 
   Future<void> _loadTotal() async {
-    final data =
-        await FirebaseService.instance.getOperasionalByMonth(_bulan.text);
+    final data = await FirebaseService.instance
+        .getOperasionalByMonth(DateFormatter.toStorageMonth(_bulan.text));
     final total = CalculationService().hitungTotalOperasional(data);
     if (mounted) {
       setState(() {
@@ -104,7 +106,7 @@ class _OperasionalScreenState extends State<OperasionalScreen> {
     try {
       final model = OperasionalModel(
         idOperasional: 'O${Uuid().v4().substring(0, 8)}',
-        bulan: _bulan.text,
+        bulan: DateFormatter.toStorageMonth(_bulan.text),
         namaBiaya: _namaBiaya.text.trim(),
         akun: _akun,
         nominal: CurrencyFormatter.parse(_nominal.text),
@@ -228,7 +230,8 @@ class _OperasionalScreenState extends State<OperasionalScreen> {
             ),
             const SizedBox(height: 14),
             AppSectionCard(
-              title: 'Daftar Operasional ${_bulan.text}',
+              title:
+                  'Daftar Operasional ${DateFormatter.displayMonth(_bulan.text)}',
               subtitle: 'Hapus biaya jika terjadi kesalahan input.',
               icon: Icons.list_alt_outlined,
               children: [
@@ -279,7 +282,7 @@ class _OperasionalScreenState extends State<OperasionalScreen> {
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
-                  'Total Operasional ${_bulan.text}',
+                  'Total Operasional ${DateFormatter.displayMonth(_bulan.text)}',
                   style: const TextStyle(
                     color: AppColors.charcoal,
                     fontWeight: FontWeight.w800,
@@ -347,7 +350,7 @@ class _OperasionalScreenState extends State<OperasionalScreen> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  '${item.bulan} • ${item.akun}',
+                  '${DateFormatter.displayMonth(item.bulan)} • ${item.akun}',
                   style: const TextStyle(color: AppColors.muted, fontSize: 12),
                 ),
                 const SizedBox(height: 5),

@@ -38,7 +38,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Future<_DashboardData> _load() async {
     final user = await AuthService().currentUser();
-    final bulan = DateFormatter.formatMonth(DateTime.now());
+    final bulan = DateFormatter.formatMonthKey(DateTime.now());
     final firebase = FirebaseService.instance;
     final calc = CalculationService();
     final capster = await firebase.getCapsterAktif();

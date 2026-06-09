@@ -173,7 +173,7 @@ class _PendapatanHarianScreenState extends State<PendapatanHarianScreen> {
       final cu = _customerUmum;
       final model = PendapatanHarianModel(
         idPendapatan: 'P${Uuid().v4().substring(0, 8)}',
-        tanggal: _tanggalController.text,
+        tanggal: DateFormatter.toStorageDate(_tanggalController.text),
         idCapster: _selectedCapster!.idCapster,
         namaCapster: _selectedCapster!.namaCapster,
         jumlahLayanan: _jumlahLayanan(),
@@ -204,7 +204,7 @@ class _PendapatanHarianScreenState extends State<PendapatanHarianScreen> {
       context,
       title: 'Hapus Pendapatan Harian',
       message:
-          'Transaksi ${data.namaCapster} tanggal ${data.tanggal} akan dihapus. Lanjutkan?',
+          'Transaksi ${data.namaCapster} tanggal ${DateFormatter.displayDate(data.tanggal)} akan dihapus. Lanjutkan?',
     );
     if (!confirmed) return;
     if (!mounted) return;
@@ -703,7 +703,7 @@ class _PendapatanHarianScreenState extends State<PendapatanHarianScreen> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  '${item.tanggal} • Customer ${item.totalCustomer} orang',
+                  '${DateFormatter.displayDate(item.tanggal)} • Customer ${item.totalCustomer} orang',
                   style: const TextStyle(color: AppColors.muted, fontSize: 12),
                 ),
                 const SizedBox(height: 5),

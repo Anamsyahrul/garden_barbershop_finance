@@ -114,7 +114,7 @@ class _BukuKasScreenState extends State<BukuKasScreen> {
       final saldo = lastSaldo + penerimaan - pengeluaran;
       final model = BukuKasModel(
         idKas: 'K${Uuid().v4().substring(0, 8)}',
-        tanggal: _tanggal.text,
+        tanggal: DateFormatter.toStorageDate(_tanggal.text),
         uraian: _uraian.text.trim(),
         akun: _akun,
         penerimaan: penerimaan,
@@ -377,7 +377,7 @@ class _BukuKasScreenState extends State<BukuKasScreen> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  '${item.tanggal} • ${item.akun}',
+                  '${DateFormatter.displayDate(item.tanggal)} • ${item.akun}',
                   style: const TextStyle(color: AppColors.muted, fontSize: 12),
                 ),
                 const SizedBox(height: 5),
