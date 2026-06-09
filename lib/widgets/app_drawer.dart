@@ -9,7 +9,6 @@ import '../screens/layanan_screen.dart';
 import '../screens/login_screen.dart';
 import '../screens/operasional_screen.dart';
 import '../screens/pendapatan_harian_screen.dart';
-import '../screens/sinkronisasi_screen.dart';
 import '../services/auth_service.dart';
 import '../theme/app_theme.dart';
 
@@ -78,8 +77,6 @@ class AppDrawer extends StatelessWidget {
                       BukuKasScreen.routeName),
                   _item(context, Icons.receipt_long, 'Operasional',
                       OperasionalScreen.routeName),
-                  _item(context, Icons.sync, 'Sinkronisasi',
-                      SinkronisasiScreen.routeName),
                 ],
                 if (role == UserRole.adminHarian) ...[
                   _item(context, Icons.payments, 'Pendapatan Harian',

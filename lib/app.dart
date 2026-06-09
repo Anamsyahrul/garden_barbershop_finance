@@ -10,7 +10,6 @@ import 'screens/layanan_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/operasional_screen.dart';
 import 'screens/pendapatan_harian_screen.dart';
-import 'screens/sinkronisasi_screen.dart';
 import 'services/auth_service.dart';
 import 'theme/app_theme.dart';
 import 'widgets/role_guard.dart';
@@ -67,10 +66,6 @@ class GardenFinanceApp extends StatelessWidget {
                 UserRole.pemilik
               ],
               child: LaporanScreen(),
-            ),
-        SinkronisasiScreen.routeName: (_) => const RoleGuard(
-              allowedRoles: [UserRole.admin],
-              child: SinkronisasiScreen(),
             ),
       },
     );

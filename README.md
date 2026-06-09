@@ -15,7 +15,7 @@ Aplikasi Flutter untuk skripsi:
 - Input pendapatan harian otomatis menghitung customer santri dan customer umum.
 - Laporan pembagian hasil otomatis menghitung bagian capster dan bagian pondok.
 - Pendapatan Usaha pada buku kas umum berasal dari total bagian pondok.
-- Data disimpan ke Cloud Firestore.
+- Data otomatis tersimpan dan terbaca dari Cloud Firestore saat proses tambah, ubah, hapus, dan tampil data.
 - Fallback dummy data tersedia jika Firebase belum dikonfigurasi.
 
 ## Akun Login Prototype
@@ -59,6 +59,8 @@ flutter run
 ## Konfigurasi Firebase
 
 Aplikasi menggunakan `firebase_core` dan `cloud_firestore`. Jika Firebase belum dikonfigurasi, aplikasi tetap dapat berjalan menggunakan dummy data sehingga UI dan alur pengujian skripsi masih bisa diuji.
+
+Setelah Firebase terkonfigurasi, aplikasi tidak memerlukan menu sinkronisasi manual. Setiap aksi simpan, ubah, hapus, dan ambil data langsung dilakukan melalui service Firebase sehingga data aplikasi selalu mengikuti data Cloud Firestore.
 
 Langkah umum konfigurasi:
 

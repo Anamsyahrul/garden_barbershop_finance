@@ -14,7 +14,6 @@ import 'package:garden_barbershop_finance/screens/laporan_screen.dart';
 import 'package:garden_barbershop_finance/screens/layanan_screen.dart';
 import 'package:garden_barbershop_finance/screens/operasional_screen.dart';
 import 'package:garden_barbershop_finance/screens/pendapatan_harian_screen.dart';
-import 'package:garden_barbershop_finance/screens/sinkronisasi_screen.dart';
 import 'package:garden_barbershop_finance/services/calculation_service.dart';
 import 'package:garden_barbershop_finance/services/firebase_service.dart';
 
@@ -60,7 +59,6 @@ void main() {
       const BukuKasScreen(),
       const OperasionalScreen(),
       const LaporanScreen(),
-      const SinkronisasiScreen(),
     ];
 
     for (final page in pages) {

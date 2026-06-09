@@ -16,7 +16,6 @@ import 'laporan_screen.dart';
 import 'layanan_screen.dart';
 import 'operasional_screen.dart';
 import 'pendapatan_harian_screen.dart';
-import 'sinkronisasi_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -483,8 +482,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
             Icons.design_services_outlined, LayananScreen.routeName, width),
         _secondaryAction(context, 'Laporan Hasil', Icons.table_chart_outlined,
             LaporanScreen.routeName, width),
-        _secondaryAction(context, 'Sinkronisasi', Icons.sync,
-            SinkronisasiScreen.routeName, width),
       ];
     }
     if (role == UserRole.adminHarian) {
