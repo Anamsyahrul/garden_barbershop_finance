@@ -38,6 +38,8 @@ username: pemilik
 password: pemilik123
 ```
 
+Catatan: akun dan password di atas digunakan untuk kebutuhan prototype, demo, dan pengujian skripsi. Pada implementasi produksi, autentikasi sebaiknya memakai Firebase Authentication atau mekanisme hashing password dengan aturan akses yang lebih ketat.
+
 ## Cara Menjalankan
 
 Pastikan Flutter SDK sudah terpasang.

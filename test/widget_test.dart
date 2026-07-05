@@ -43,6 +43,19 @@ void main() {
     expect(find.text('Menu Utama'), findsOneWidget);
   });
 
+  testWidgets('login capster diva berhasil menuju dashboard personal',
+      (WidgetTester tester) async {
+    await tester.pumpWidget(const GardenFinanceApp());
+
+    await tester.enterText(find.byType(TextFormField).at(0), 'diva');
+    await tester.enterText(find.byType(TextFormField).at(1), 'capster123');
+    await tester.tap(find.widgetWithText(FilledButton, 'Masuk'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Dashboard'), findsOneWidget);
+    expect(find.text('Bagian Saya'), findsOneWidget);
+  });
+
   testWidgets('semua halaman utama dapat dibuka', (WidgetTester tester) async {
     SharedPreferences.setMockInitialValues({
       'is_logged_in': true,

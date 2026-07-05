@@ -32,9 +32,9 @@ class AuthService {
       name: 'Admin Garden',
       role: UserRole.admin,
     ),
-    'capster': _Credential(
+    'diva': _Credential(
       password: 'capster123',
-      name: 'Capster',
+      name: 'Muhamad Diva Syarri',
       role: UserRole.capster,
       idCapster: 'C001',
     ),
