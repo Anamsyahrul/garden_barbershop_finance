@@ -26,8 +26,8 @@ void main() {
   testWidgets('menampilkan halaman login', (WidgetTester tester) async {
     await tester.pumpWidget(const GardenFinanceApp());
 
-    expect(find.text('Garden Barbershop Finance'), findsOneWidget);
-    expect(find.text('Masuk'), findsWidgets);
+    expect(find.text('Garden Barbershop'), findsOneWidget);
+    expect(find.text('Masuk ke akun'), findsOneWidget);
   });
 
   testWidgets('login admin berhasil menuju dashboard',
@@ -36,7 +36,7 @@ void main() {
 
     await tester.enterText(find.byType(TextFormField).at(0), 'admin');
     await tester.enterText(find.byType(TextFormField).at(1), 'admin123');
-    await tester.tap(find.widgetWithText(FilledButton, 'Masuk'));
+    await tester.tap(find.widgetWithText(FilledButton, 'Masuk Sekarang'));
     await tester.pumpAndSettle();
 
     expect(find.text('Dashboard'), findsOneWidget);
@@ -49,7 +49,7 @@ void main() {
 
     await tester.enterText(find.byType(TextFormField).at(0), 'diva');
     await tester.enterText(find.byType(TextFormField).at(1), 'capster123');
-    await tester.tap(find.widgetWithText(FilledButton, 'Masuk'));
+    await tester.tap(find.widgetWithText(FilledButton, 'Masuk Sekarang'));
     await tester.pumpAndSettle();
 
     expect(find.text('Dashboard'), findsOneWidget);
