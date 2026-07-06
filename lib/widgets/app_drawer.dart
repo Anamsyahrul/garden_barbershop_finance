@@ -25,85 +25,40 @@ class AppDrawer extends StatelessWidget {
             final user = snapshot.data;
             final role = user?.role ?? UserRole.admin;
             return ListView(
-              padding: EdgeInsets.zero,
+              padding: const EdgeInsets.fromLTRB(12, 12, 12, 18),
               children: [
-                Container(
-                  padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
-                  decoration: const BoxDecoration(
-                    color: AppColors.paper,
-                    border: Border(
-                      bottom: BorderSide(color: AppColors.line),
-                    ),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const _BrandMark(size: 48),
-                      const SizedBox(height: 16),
-                      const Text(
-                        'Garden Barbershop',
-                        style: TextStyle(
-                          color: AppColors.charcoal,
-                          fontSize: 18,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        user == null
-                            ? 'Finance Control'
-                            : '${user.name} • ${role.label}',
-                        style: const TextStyle(
-                          color: AppColors.tealDark,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                _item(context, Icons.dashboard, 'Dashboard',
+                _DrawerHero(user: user, role: role),
+                const SizedBox(height: 14),
+                _item(context, Icons.dashboard_rounded, 'Dashboard',
                     DashboardScreen.routeName),
                 if (role == UserRole.admin) ...[
-                  _item(context, Icons.people, 'Data Capster',
+                  _item(context, Icons.people_alt_rounded, 'Data Capster',
                       CapsterScreen.routeName),
-                  _item(context, Icons.manage_accounts, 'Akun Pengguna',
+                  _item(context, Icons.manage_accounts_rounded, 'Akun Pengguna',
                       AkunPenggunaScreen.routeName),
-                  _item(context, Icons.design_services, 'Data Layanan',
+                  _item(context, Icons.design_services_rounded, 'Data Layanan',
                       LayananScreen.routeName),
-                  _item(context, Icons.payments, 'Pendapatan Harian',
+                  _item(context, Icons.payments_rounded, 'Pendapatan Harian',
                       PendapatanHarianScreen.routeName),
-                  _item(context, Icons.account_balance_wallet, 'Buku Kas Umum',
-                      BukuKasScreen.routeName),
-                  _item(context, Icons.receipt_long, 'Operasional',
+                  _item(context, Icons.account_balance_wallet_rounded,
+                      'Buku Kas Umum', BukuKasScreen.routeName),
+                  _item(context, Icons.receipt_long_rounded, 'Operasional',
                       OperasionalScreen.routeName),
                 ],
                 if (role == UserRole.adminHarian) ...[
-                  _item(context, Icons.payments, 'Pendapatan Harian',
+                  _item(context, Icons.payments_rounded, 'Pendapatan Harian',
                       PendapatanHarianScreen.routeName),
                 ],
                 if (role == UserRole.pemilik) ...[
-                  _item(context, Icons.account_balance_wallet, 'Buku Kas Umum',
-                      BukuKasScreen.routeName),
-                  _item(context, Icons.receipt_long, 'Operasional',
+                  _item(context, Icons.account_balance_wallet_rounded,
+                      'Buku Kas Umum', BukuKasScreen.routeName),
+                  _item(context, Icons.receipt_long_rounded, 'Operasional',
                       OperasionalScreen.routeName),
                 ],
-                _item(context, Icons.table_chart, 'Laporan Pembagian Hasil',
-                    LaporanScreen.routeName),
+                _item(context, Icons.bar_chart_rounded,
+                    'Laporan Pembagian Hasil', LaporanScreen.routeName),
                 const Divider(),
-                ListTile(
-                  leading: const Icon(Icons.logout),
-                  title: const Text('Keluar'),
-                  onTap: () async {
-                    await AuthService().logout();
-                    if (!context.mounted) return;
-                    Navigator.pushNamedAndRemoveUntil(
-                      context,
-                      LoginScreen.routeName,
-                      (_) => false,
-                    );
-                  },
-                ),
+                _logoutItem(context),
               ],
             );
           },
@@ -116,15 +71,124 @@ class AppDrawer extends StatelessWidget {
       BuildContext context, IconData icon, String title, String route) {
     final selected = ModalRoute.of(context)?.settings.name == route;
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
+      padding: const EdgeInsets.symmetric(vertical: 3),
       child: ListTile(
         selected: selected,
         selectedTileColor: AppColors.mint,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        leading:
-            Icon(icon, color: selected ? AppColors.tealDark : AppColors.teal),
+        tileColor: selected ? AppColors.mint : Colors.transparent,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+        leading: Container(
+          width: 38,
+          height: 38,
+          decoration: BoxDecoration(
+            color: selected
+                ? AppColors.teal.withValues(alpha: 0.14)
+                : AppColors.panel,
+            borderRadius: BorderRadius.circular(14),
+          ),
+          child: Icon(
+            icon,
+            color: selected ? AppColors.tealDark : AppColors.charcoalSoft,
+            size: 21,
+          ),
+        ),
         title: Text(title),
+        trailing: selected
+            ? const Icon(Icons.check_circle_rounded,
+                color: AppColors.tealDark, size: 18)
+            : null,
         onTap: () => Navigator.pushReplacementNamed(context, route),
+      ),
+    );
+  }
+
+  Widget _logoutItem(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 3),
+      child: ListTile(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+        leading: Container(
+          width: 38,
+          height: 38,
+          decoration: BoxDecoration(
+            color: AppColors.danger.withValues(alpha: 0.10),
+            borderRadius: BorderRadius.circular(14),
+          ),
+          child: const Icon(Icons.logout_rounded,
+              color: AppColors.danger, size: 21),
+        ),
+        title: const Text('Keluar'),
+        onTap: () async {
+          await AuthService().logout();
+          if (!context.mounted) return;
+          Navigator.pushNamedAndRemoveUntil(
+            context,
+            LoginScreen.routeName,
+            (_) => false,
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _DrawerHero extends StatelessWidget {
+  const _DrawerHero({required this.user, required this.role});
+
+  final AppUser? user;
+  final UserRole role;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        gradient: AppColors.primaryGradient,
+        borderRadius: AppTheme.radiusLarge,
+        boxShadow: AppTheme.floatingShadow,
+      ),
+      child: Stack(
+        children: [
+          Positioned(
+            right: -26,
+            bottom: -30,
+            child: Icon(
+              Icons.account_balance_wallet_rounded,
+              color: Colors.white.withValues(alpha: 0.10),
+              size: 118,
+            ),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const _BrandMark(size: 52),
+              const SizedBox(height: 16),
+              const Text(
+                'Garden Barbershop',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 19,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: -0.3,
+                ),
+              ),
+              const SizedBox(height: 5),
+              Text(
+                user == null
+                    ? 'Finance Control'
+                    : '${user!.name} • ${role.label}',
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.82),
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  height: 1.3,
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -141,11 +205,13 @@ class _BrandMark extends StatelessWidget {
       width: size,
       height: size,
       decoration: BoxDecoration(
-        color: AppColors.mint,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: AppColors.teal, width: 1.5),
+        color: Colors.white.withValues(alpha: 0.16),
+        borderRadius: BorderRadius.circular(18),
+        border:
+            Border.all(color: Colors.white.withValues(alpha: 0.26), width: 1.3),
       ),
-      child: const Icon(Icons.content_cut, color: AppColors.tealDark, size: 28),
+      child:
+          const Icon(Icons.content_cut_rounded, color: Colors.white, size: 29),
     );
   }
 }

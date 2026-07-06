@@ -17,43 +17,34 @@ class AppPageHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: AppColors.paper,
-        borderRadius: BorderRadius.circular(8),
+        gradient: AppColors.softGradient,
+        borderRadius: AppTheme.radiusLarge,
         border: Border.all(color: AppColors.line),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.ink.withValues(alpha: 0.07),
-            blurRadius: 18,
-            offset: const Offset(0, 10),
-          ),
-        ],
+        boxShadow: AppTheme.softShadow,
       ),
       child: Stack(
         children: [
           Positioned(
-            right: -6,
-            bottom: -10,
-            child: Icon(
-              icon,
-              color: AppColors.teal.withValues(alpha: 0.06),
-              size: 78,
-            ),
+            right: -12,
+            bottom: -18,
+            child: Icon(icon,
+                color: AppColors.teal.withValues(alpha: 0.08), size: 96),
           ),
           Row(
             children: [
               Container(
-                width: 42,
-                height: 42,
+                width: 52,
+                height: 52,
                 decoration: BoxDecoration(
-                  color: AppColors.mint,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: AppColors.teal),
+                  gradient: AppColors.primaryGradient,
+                  borderRadius: BorderRadius.circular(18),
+                  boxShadow: AppTheme.floatingShadow,
                 ),
-                child: Icon(icon, color: AppColors.tealDark),
+                child: Icon(icon, color: Colors.white, size: 28),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 14),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -62,16 +53,18 @@ class AppPageHeader extends StatelessWidget {
                       title,
                       style: const TextStyle(
                         color: AppColors.charcoal,
-                        fontSize: 17,
+                        fontSize: 18,
                         fontWeight: FontWeight.w900,
+                        letterSpacing: -0.2,
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 5),
                     Text(
                       subtitle,
                       style: const TextStyle(
                         color: AppColors.muted,
-                        fontSize: 12,
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w600,
                         height: 1.35,
                       ),
                     ),
@@ -126,6 +119,56 @@ class ResponsiveActionRow extends StatelessWidget {
   }
 }
 
+class PremiumSectionTitle extends StatelessWidget {
+  const PremiumSectionTitle({
+    super.key,
+    required this.title,
+    this.subtitle,
+    this.action,
+  });
+
+  final String title;
+  final String? subtitle;
+  final Widget? action;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: const TextStyle(
+                  color: AppColors.charcoal,
+                  fontSize: 17,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: -0.2,
+                ),
+              ),
+              if (subtitle != null) ...[
+                const SizedBox(height: 3),
+                Text(
+                  subtitle!,
+                  style: const TextStyle(
+                    color: AppColors.muted,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+        if (action != null) action!,
+      ],
+    );
+  }
+}
+
 class MobileInfoTile extends StatelessWidget {
   const MobileInfoTile({
     super.key,
@@ -148,28 +191,36 @@ class MobileInfoTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return Material(
       color: AppColors.paper,
-      borderRadius: BorderRadius.circular(8),
+      borderRadius: AppTheme.radiusMedium,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: AppTheme.radiusMedium,
         child: Container(
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
+            color: AppColors.paper,
             border: Border.all(color: AppColors.line),
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: AppTheme.radiusMedium,
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.ink.withValues(alpha: 0.045),
+                blurRadius: 18,
+                offset: const Offset(0, 10),
+              ),
+            ],
           ),
           child: Row(
             children: [
               Container(
-                width: 40,
-                height: 40,
+                width: 46,
+                height: 46,
                 decoration: BoxDecoration(
                   color: tint.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(16),
                 ),
-                child: Icon(icon, color: tint),
+                child: Icon(icon, color: tint, size: 24),
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -180,7 +231,8 @@ class MobileInfoTile extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
                         color: AppColors.charcoal,
-                        fontWeight: FontWeight.w800,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: -0.1,
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -189,14 +241,19 @@ class MobileInfoTile extends StatelessWidget {
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
-                          color: AppColors.muted, fontSize: 12, height: 1.3),
+                        color: AppColors.muted,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        height: 1.3,
+                      ),
                     ),
                   ],
                 ),
               ),
               const SizedBox(width: 8),
               trailing ??
-                  const Icon(Icons.chevron_right, color: AppColors.muted),
+                  const Icon(Icons.chevron_right_rounded,
+                      color: AppColors.muted),
             ],
           ),
         ),
@@ -221,46 +278,61 @@ class CompactMetricCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              width: 34,
-              height: 34,
-              decoration: BoxDecoration(
-                color: tint.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(8),
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppColors.paper,
+        borderRadius: AppTheme.radiusMedium,
+        border: Border.all(color: AppColors.line),
+        boxShadow: AppTheme.softShadow,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: tint.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Icon(icon, color: tint, size: 21),
               ),
-              child: Icon(icon, color: tint, size: 21),
-            ),
-            const SizedBox(height: 10),
-            Text(
-              title,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                color: AppColors.muted,
-                fontSize: 12,
-                height: 1.25,
-                fontWeight: FontWeight.w600,
+              const Spacer(),
+              Container(
+                width: 8,
+                height: 8,
+                decoration: BoxDecoration(color: tint, shape: BoxShape.circle),
               ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            title,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              color: AppColors.muted,
+              fontSize: 12,
+              height: 1.25,
+              fontWeight: FontWeight.w700,
             ),
-            const SizedBox(height: 6),
-            Text(
-              value,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                color: AppColors.charcoal,
-                fontSize: 16,
-                fontWeight: FontWeight.w900,
-              ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              color: AppColors.charcoal,
+              fontSize: 16,
+              fontWeight: FontWeight.w900,
+              letterSpacing: -0.2,
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -282,58 +354,63 @@ class AppSectionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(14),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (icon != null) ...[
-                  Container(
-                    width: 34,
-                    height: 34,
-                    decoration: BoxDecoration(
-                      color: AppColors.teal.withValues(alpha: 0.10),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Icon(icon, color: AppColors.teal),
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.paper,
+        borderRadius: AppTheme.radiusLarge,
+        border: Border.all(color: AppColors.line),
+        boxShadow: AppTheme.softShadow,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (icon != null) ...[
+                Container(
+                  width: 38,
+                  height: 38,
+                  decoration: BoxDecoration(
+                    color: AppColors.teal.withValues(alpha: 0.11),
+                    borderRadius: BorderRadius.circular(14),
                   ),
-                  const SizedBox(width: 10),
-                ],
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
+                  child: Icon(icon, color: AppColors.teal),
+                ),
+                const SizedBox(width: 10),
+              ],
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        color: AppColors.charcoal,
+                        fontWeight: FontWeight.w900,
+                        fontSize: 15.5,
+                      ),
+                    ),
+                    if (subtitle != null) ...[
+                      const SizedBox(height: 3),
                       Text(
-                        title,
+                        subtitle!,
                         style: const TextStyle(
-                          color: AppColors.charcoal,
-                          fontWeight: FontWeight.w800,
-                          fontSize: 15,
+                          color: AppColors.muted,
+                          fontWeight: FontWeight.w600,
+                          height: 1.35,
                         ),
                       ),
-                      if (subtitle != null) ...[
-                        const SizedBox(height: 3),
-                        Text(
-                          subtitle!,
-                          style: const TextStyle(
-                            color: AppColors.muted,
-                            height: 1.35,
-                          ),
-                        ),
-                      ],
                     ],
-                  ),
+                  ],
                 ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            ...children,
-          ],
-        ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          ...children,
+        ],
       ),
     );
   }
@@ -353,18 +430,26 @@ class EmptyState extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(28),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, color: AppColors.muted, size: 44),
-            const SizedBox(height: 10),
+            Container(
+              width: 72,
+              height: 72,
+              decoration: BoxDecoration(
+                color: AppColors.mint,
+                borderRadius: BorderRadius.circular(24),
+              ),
+              child: Icon(icon, color: AppColors.tealDark, size: 38),
+            ),
+            const SizedBox(height: 12),
             Text(
               message,
               textAlign: TextAlign.center,
               style: const TextStyle(
                 color: AppColors.muted,
-                fontWeight: FontWeight.w600,
+                fontWeight: FontWeight.w700,
               ),
             ),
           ],
@@ -386,9 +471,9 @@ class StatusChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = active ? AppColors.teal : AppColors.muted;
+    final color = active ? AppColors.success : AppColors.muted;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 6),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.10),
         borderRadius: BorderRadius.circular(999),
@@ -399,7 +484,7 @@ class StatusChip extends StatelessWidget {
         style: TextStyle(
           color: color,
           fontSize: 12,
-          fontWeight: FontWeight.w800,
+          fontWeight: FontWeight.w900,
         ),
       ),
     );
@@ -423,7 +508,7 @@ Future<bool> confirmDelete(
         ),
         FilledButton.icon(
           style: FilledButton.styleFrom(
-            backgroundColor: Colors.red.shade700,
+            backgroundColor: AppColors.danger,
             foregroundColor: Colors.white,
           ),
           onPressed: () => Navigator.pop(dialogContext, true),

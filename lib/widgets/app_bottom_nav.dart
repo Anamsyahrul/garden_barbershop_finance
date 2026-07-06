@@ -28,26 +28,44 @@ class AppBottomNav extends StatelessWidget {
       builder: (context, snapshot) {
         final role = snapshot.data?.role ?? UserRole.admin;
         final items = _itemsForRole(role);
-        return NavigationBar(
-          height: 64,
-          selectedIndex: _currentIndex(items),
-          backgroundColor: AppColors.paper,
-          indicatorColor: AppColors.mint,
-          elevation: 2,
-          labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
-          onDestinationSelected: (index) {
-            final route = items[index].route;
-            if (route == currentRoute) return;
-            Navigator.pushReplacementNamed(context, route);
-          },
-          destinations: [
-            for (final item in items)
-              NavigationDestination(
-                icon: Icon(item.icon),
-                selectedIcon: Icon(item.selectedIcon),
-                label: item.label,
+        return Container(
+          decoration: BoxDecoration(
+            color: AppColors.paper,
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.ink.withValues(alpha: 0.10),
+                blurRadius: 24,
+                offset: const Offset(0, -10),
               ),
-          ],
+            ],
+          ),
+          child: SafeArea(
+            top: false,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(8, 6, 8, 6),
+              child: NavigationBar(
+                height: 66,
+                selectedIndex: _currentIndex(items),
+                backgroundColor: AppColors.paper,
+                indicatorColor: AppColors.mint,
+                elevation: 0,
+                labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+                onDestinationSelected: (index) {
+                  final route = items[index].route;
+                  if (route == currentRoute) return;
+                  Navigator.pushReplacementNamed(context, route);
+                },
+                destinations: [
+                  for (final item in items)
+                    NavigationDestination(
+                      icon: Icon(item.icon),
+                      selectedIcon: Icon(item.selectedIcon),
+                      label: item.label,
+                    ),
+                ],
+              ),
+            ),
+          ),
         );
       },
     );
@@ -57,13 +75,13 @@ class AppBottomNav extends StatelessWidget {
     final home = _NavItem(
       route: DashboardScreen.routeName,
       icon: Icons.dashboard_outlined,
-      selectedIcon: Icons.dashboard,
+      selectedIcon: Icons.dashboard_rounded,
       label: 'Home',
     );
     final laporan = _NavItem(
       route: LaporanScreen.routeName,
-      icon: Icons.table_chart_outlined,
-      selectedIcon: Icons.table_chart,
+      icon: Icons.bar_chart_outlined,
+      selectedIcon: Icons.bar_chart_rounded,
       label: 'Laporan',
     );
     if (role == UserRole.capster) {
@@ -75,7 +93,7 @@ class AppBottomNav extends StatelessWidget {
         _NavItem(
           route: PendapatanHarianScreen.routeName,
           icon: Icons.payments_outlined,
-          selectedIcon: Icons.payments,
+          selectedIcon: Icons.payments_rounded,
           label: 'Input',
         ),
         laporan,
@@ -87,13 +105,13 @@ class AppBottomNav extends StatelessWidget {
         _NavItem(
           route: BukuKasScreen.routeName,
           icon: Icons.account_balance_wallet_outlined,
-          selectedIcon: Icons.account_balance_wallet,
+          selectedIcon: Icons.account_balance_wallet_rounded,
           label: 'Kas',
         ),
         _NavItem(
           route: OperasionalScreen.routeName,
           icon: Icons.receipt_long_outlined,
-          selectedIcon: Icons.receipt_long,
+          selectedIcon: Icons.receipt_long_rounded,
           label: 'Ops',
         ),
         laporan,
@@ -104,19 +122,19 @@ class AppBottomNav extends StatelessWidget {
       _NavItem(
         route: PendapatanHarianScreen.routeName,
         icon: Icons.payments_outlined,
-        selectedIcon: Icons.payments,
+        selectedIcon: Icons.payments_rounded,
         label: 'Input',
       ),
       _NavItem(
         route: BukuKasScreen.routeName,
         icon: Icons.account_balance_wallet_outlined,
-        selectedIcon: Icons.account_balance_wallet,
+        selectedIcon: Icons.account_balance_wallet_rounded,
         label: 'Kas',
       ),
       _NavItem(
         route: OperasionalScreen.routeName,
         icon: Icons.receipt_long_outlined,
-        selectedIcon: Icons.receipt_long,
+        selectedIcon: Icons.receipt_long_rounded,
         label: 'Ops',
       ),
       laporan,

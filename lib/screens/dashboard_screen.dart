@@ -84,15 +84,26 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Dashboard')),
+      extendBody: true,
+      appBar: AppBar(
+        title: const Text('Dashboard'),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 10),
+            child: IconButton.filledTonal(
+              tooltip: 'Refresh data',
+              onPressed: () => setState(() => _future = _load()),
+              icon: const Icon(Icons.refresh_rounded),
+            ),
+          ),
+        ],
+      ),
       drawer: const AppDrawer(),
       bottomNavigationBar:
           const AppBottomNav(currentRoute: DashboardScreen.routeName),
       body: RefreshIndicator(
         onRefresh: () async {
-          setState(() {
-            _future = _load();
-          });
+          setState(() => _future = _load());
           await _future;
         },
         child: FutureBuilder<_DashboardData>(
@@ -106,13 +117,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
             final personalView =
                 role == UserRole.capster || role == UserRole.adminHarian;
             return ListView(
-              padding: const EdgeInsets.fromLTRB(14, 14, 14, 18),
+              padding: const EdgeInsets.fromLTRB(16, 10, 16, 96),
               children: [
                 _primaryBalance(data),
-                const SizedBox(height: 12),
+                const SizedBox(height: 16),
                 LayoutBuilder(
                   builder: (context, constraints) {
-                    final itemWidth = constraints.maxWidth >= 640
+                    final itemWidth = constraints.maxWidth >= 720
                         ? (constraints.maxWidth - 24) / 3
                         : (constraints.maxWidth - 12) / 2;
                     return Wrap(
@@ -127,7 +138,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 : 'Operasional',
                             value:
                                 CurrencyFormatter.format(data.totalOperasional),
-                            icon: Icons.receipt_long_outlined,
+                            icon: Icons.receipt_long_rounded,
                             tint: AppColors.brass,
                           ),
                         ),
@@ -139,8 +150,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             value: personalView
                                 ? (data.user?.name ?? '-')
                                 : '${data.jumlahCapsterAktif} orang',
-                            icon: Icons.people_alt_outlined,
-                            tint: AppColors.teal,
+                            icon: Icons.groups_2_rounded,
+                            tint: AppColors.blue,
                           ),
                         ),
                         SizedBox(
@@ -153,123 +164,31 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                   ? data.totalBagianCapster
                                   : data.totalBagianPondok,
                             ),
-                            icon: Icons.storefront_outlined,
-                            tint: AppColors.charcoalSoft,
+                            icon: Icons.savings_rounded,
+                            tint: AppColors.teal,
                           ),
                         ),
                       ],
                     );
                   },
                 ),
-                const SizedBox(height: 14),
-                Row(
-                  children: [
-                    const Expanded(
-                      child: Text(
-                        'Menu Utama',
-                        style: TextStyle(
-                          color: AppColors.charcoal,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w900,
-                        ),
-                      ),
-                    ),
-                    TextButton.icon(
-                      onPressed: () {
-                        setState(() {
-                          _future = _load();
-                        });
-                      },
-                      icon: const Icon(Icons.refresh, size: 18),
-                      label: const Text('Refresh'),
-                    ),
-                  ],
+                const SizedBox(height: 20),
+                PremiumSectionTitle(
+                  title: 'Menu Utama',
+                  subtitle: 'Akses fitur yang paling sering dipakai',
+                  action: TextButton.icon(
+                    onPressed: () => setState(() => _future = _load()),
+                    icon: const Icon(Icons.sync_rounded, size: 18),
+                    label: const Text('Sync'),
+                  ),
                 ),
-                const SizedBox(height: 10),
-                if (role == UserRole.admin) ...[
-                  _quickAction(
-                    context,
-                    title: 'Pendapatan Harian',
-                    subtitle: 'Input layanan capster',
-                    icon: Icons.payments_outlined,
-                    route: PendapatanHarianScreen.routeName,
-                    tint: AppColors.teal,
-                  ),
-                  const SizedBox(height: 8),
-                  _quickAction(
-                    context,
-                    title: 'Buku Kas Umum',
-                    subtitle: 'Catat penerimaan dan pengeluaran',
-                    icon: Icons.account_balance_wallet_outlined,
-                    route: BukuKasScreen.routeName,
-                    tint: AppColors.brass,
-                  ),
-                  const SizedBox(height: 8),
-                  _quickAction(
-                    context,
-                    title: 'Operasional',
-                    subtitle: 'Input biaya bulanan',
-                    icon: Icons.receipt_long_outlined,
-                    route: OperasionalScreen.routeName,
-                    tint: AppColors.charcoalSoft,
-                  ),
-                ],
-                if (role == UserRole.adminHarian) ...[
-                  _quickAction(
-                    context,
-                    title: 'Pendapatan Harian',
-                    subtitle: 'Input transaksi harian capster',
-                    icon: Icons.payments_outlined,
-                    route: PendapatanHarianScreen.routeName,
-                    tint: AppColors.teal,
-                  ),
-                  const SizedBox(height: 8),
-                  _quickAction(
-                    context,
-                    title: 'Laporan Saya',
-                    subtitle: 'Lihat rekap capster terkait',
-                    icon: Icons.table_chart_outlined,
-                    route: LaporanScreen.routeName,
-                    tint: AppColors.brass,
-                  ),
-                ],
-                if (role == UserRole.pemilik) ...[
-                  _quickAction(
-                    context,
-                    title: 'Laporan Pembagian Hasil',
-                    subtitle: 'Pantau hasil capster dan pondok',
-                    icon: Icons.table_chart_outlined,
-                    route: LaporanScreen.routeName,
-                    tint: AppColors.teal,
-                  ),
-                  const SizedBox(height: 8),
-                  _quickAction(
-                    context,
-                    title: 'Buku Kas Umum',
-                    subtitle: 'Lihat catatan kas',
-                    icon: Icons.account_balance_wallet_outlined,
-                    route: BukuKasScreen.routeName,
-                    tint: AppColors.brass,
-                  ),
-                  const SizedBox(height: 8),
-                  _quickAction(
-                    context,
-                    title: 'Operasional',
-                    subtitle: 'Lihat biaya bulanan',
-                    icon: Icons.receipt_long_outlined,
-                    route: OperasionalScreen.routeName,
-                    tint: AppColors.charcoalSoft,
-                  ),
-                ],
-                if (role == UserRole.capster)
-                  _quickAction(
-                    context,
-                    title: 'Laporan Saya',
-                    subtitle: 'Lihat rekap dan bagian capster',
-                    icon: Icons.table_chart_outlined,
-                    route: LaporanScreen.routeName,
-                    tint: AppColors.teal,
-                  ),
+                const SizedBox(height: 12),
+                ..._mainActions(context, role),
+                const SizedBox(height: 20),
+                PremiumSectionTitle(
+                  title: 'Kelola Data',
+                  subtitle: 'Menu administrasi dan laporan',
+                ),
                 const SizedBox(height: 12),
                 LayoutBuilder(
                   builder: (context, constraints) {
@@ -284,6 +203,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   },
                 ),
                 const SizedBox(height: 18),
+                _insightCard(data, personalView),
               ],
             );
           },
@@ -293,228 +213,343 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _primaryBalance(_DashboardData data) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(14),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  width: 38,
-                  height: 38,
-                  decoration: BoxDecoration(
-                    color: AppColors.mint,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(Icons.content_cut,
-                      color: AppColors.tealDark, size: 21),
-                ),
-                const SizedBox(width: 10),
-                const Expanded(
-                  child: Text(
-                    'Garden Barbershop Finance',
-                    style: TextStyle(
-                      color: AppColors.charcoal,
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
-                ),
-                IconButton(
-                  tooltip: 'Refresh',
-                  onPressed: () {
-                    setState(() {
-                      _future = _load();
-                    });
-                  },
-                  icon: const Icon(Icons.refresh),
-                ),
-              ],
+    return Container(
+      padding: const EdgeInsets.all(22),
+      decoration: BoxDecoration(
+        gradient: AppColors.primaryGradient,
+        borderRadius: AppTheme.radiusLarge,
+        boxShadow: AppTheme.floatingShadow,
+      ),
+      child: Stack(
+        children: [
+          Positioned(
+            right: -22,
+            top: -24,
+            child: Icon(
+              Icons.auto_graph_rounded,
+              color: Colors.white.withValues(alpha: 0.09),
+              size: 150,
             ),
-            const SizedBox(height: 12),
-            Text(
-              data.user == null
-                  ? 'Dashboard'
-                  : '${data.user!.name} • ${data.user!.role.label}',
-              style: const TextStyle(
-                color: AppColors.tealDark,
-                fontSize: 12,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-            const SizedBox(height: 10),
-            const Text(
-              'Total Pendapatan Bulan Ini',
-              style: TextStyle(
-                color: AppColors.muted,
-                fontWeight: FontWeight.w700,
-                fontSize: 12,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              CurrencyFormatter.format(data.totalPendapatan),
-              style: const TextStyle(
-                color: AppColors.charcoal,
-                fontSize: 26,
-                fontWeight: FontWeight.w900,
-              ),
-            ),
-            const SizedBox(height: 10),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
-              decoration: BoxDecoration(
-                color: AppColors.mint,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
                 children: [
-                  const Icon(Icons.person_outline,
-                      color: AppColors.tealDark, size: 20),
-                  const SizedBox(width: 7),
-                  const Expanded(
-                    child: Text(
-                      'Bagian capster',
-                      style: TextStyle(
-                        color: AppColors.tealDark,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 12,
-                      ),
+                  Container(
+                    width: 50,
+                    height: 50,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.16),
+                      borderRadius: BorderRadius.circular(18),
+                      border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.22)),
+                    ),
+                    child: const Icon(Icons.content_cut_rounded,
+                        color: Colors.white, size: 26),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Garden Finance',
+                          style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w900,
+                              fontSize: 16),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          data.user == null
+                              ? 'Dashboard bisnis'
+                              : '${data.user!.name} • ${data.user!.role.label}',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                              color: Colors.white.withValues(alpha: 0.76),
+                              fontWeight: FontWeight.w700,
+                              fontSize: 12),
+                        ),
+                      ],
                     ),
                   ),
-                  Text(
-                    CurrencyFormatter.format(data.totalBagianCapster),
-                    style: const TextStyle(
-                      color: AppColors.tealDark,
-                      fontWeight: FontWeight.w900,
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: const Text(
+                      'Live',
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w900,
+                          fontSize: 12),
                     ),
                   ),
                 ],
               ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _quickAction(
-    BuildContext context, {
-    required String title,
-    required String subtitle,
-    required IconData icon,
-    required String route,
-    required Color tint,
-  }) {
-    return MobileInfoTile(
-      title: title,
-      subtitle: subtitle,
-      icon: icon,
-      tint: tint,
-      onTap: () => Navigator.pushNamed(context, route),
-      trailing: Container(
-        width: 34,
-        height: 34,
-        decoration: BoxDecoration(
-          color: AppColors.teal,
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: const Icon(Icons.arrow_forward, color: Colors.white, size: 18),
-      ),
-    );
-  }
-
-  Widget _secondaryAction(
-    BuildContext context,
-    String title,
-    IconData icon,
-    String route,
-    double width,
-  ) {
-    return SizedBox(
-      width: width,
-      child: Card(
-        child: InkWell(
-          borderRadius: BorderRadius.circular(8),
-          onTap: () => Navigator.pushNamed(context, route),
-          child: Padding(
-            padding: const EdgeInsets.all(14),
-            child: Row(
-              children: [
-                _menuIcon(icon),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      color: AppColors.charcoal,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
+              const SizedBox(height: 26),
+              Text(
+                'Total Pendapatan Bulan Ini',
+                style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.72),
+                    fontWeight: FontWeight.w700,
+                    fontSize: 12),
+              ),
+              const SizedBox(height: 5),
+              Text(
+                CurrencyFormatter.format(data.totalPendapatan),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 31,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: -1.1,
                 ),
-              ],
-            ),
+              ),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.13),
+                  borderRadius: BorderRadius.circular(18),
+                  border:
+                      Border.all(color: Colors.white.withValues(alpha: 0.16)),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.person_rounded,
+                        color: Colors.white, size: 20),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Bagian capster',
+                        style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.78),
+                            fontWeight: FontWeight.w700,
+                            fontSize: 12),
+                      ),
+                    ),
+                    Text(
+                      CurrencyFormatter.format(data.totalBagianCapster),
+                      style: const TextStyle(
+                          color: Colors.white, fontWeight: FontWeight.w900),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  List<Widget> _mainActions(BuildContext context, UserRole role) {
+    final actions = <_ActionData>[];
+    if (role == UserRole.admin || role == UserRole.adminHarian) {
+      actions.add(_ActionData(
+          'Input Harian',
+          'Catat transaksi',
+          Icons.payments_rounded,
+          PendapatanHarianScreen.routeName,
+          AppColors.teal));
+    }
+    if (role == UserRole.admin || role == UserRole.pemilik) {
+      actions.add(_ActionData(
+          'Buku Kas',
+          'Penerimaan & keluar',
+          Icons.account_balance_wallet_rounded,
+          BukuKasScreen.routeName,
+          AppColors.blue));
+      actions.add(_ActionData(
+          'Operasional',
+          'Biaya bulanan',
+          Icons.receipt_long_rounded,
+          OperasionalScreen.routeName,
+          AppColors.brass));
+    }
+    actions.add(_ActionData(
+        role == UserRole.capster ? 'Laporan Saya' : 'Laporan',
+        'Pembagian hasil',
+        Icons.table_chart_rounded,
+        LaporanScreen.routeName,
+        AppColors.emerald));
+
+    return [
+      LayoutBuilder(
+        builder: (context, constraints) {
+          final width = constraints.maxWidth >= 720
+              ? (constraints.maxWidth - 36) / 4
+              : (constraints.maxWidth - 12) / 2;
+          return Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            children: [
+              for (final action in actions)
+                SizedBox(
+                  width: width,
+                  child: _quickActionCard(context, action),
+                ),
+            ],
+          );
+        },
+      ),
+    ];
+  }
+
+  Widget _quickActionCard(BuildContext context, _ActionData action) {
+    return Material(
+      color: AppColors.paper,
+      borderRadius: AppTheme.radiusMedium,
+      child: InkWell(
+        borderRadius: AppTheme.radiusMedium,
+        onTap: () => Navigator.pushNamed(context, action.route),
+        child: Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: AppColors.paper,
+            borderRadius: AppTheme.radiusMedium,
+            border: Border.all(color: AppColors.line),
+            boxShadow: AppTheme.softShadow,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: action.tint.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Icon(action.icon, color: action.tint, size: 24),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                action.title,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                    color: AppColors.charcoal,
+                    fontWeight: FontWeight.w900,
+                    fontSize: 14),
+              ),
+              const SizedBox(height: 3),
+              Text(
+                action.subtitle,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                    color: AppColors.muted,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 11.5),
+              ),
+            ],
           ),
         ),
       ),
     );
   }
 
+  Widget _secondaryAction(BuildContext context, String title, IconData icon,
+      String route, double width) {
+    return SizedBox(
+      width: width,
+      child: MobileInfoTile(
+        title: title,
+        subtitle: 'Buka dan kelola $title',
+        icon: icon,
+        onTap: () => Navigator.pushNamed(context, route),
+        tint: AppColors.tealDark,
+      ),
+    );
+  }
+
   List<Widget> _secondaryActions(
-    BuildContext context,
-    UserRole role,
-    double width,
-  ) {
+      BuildContext context, UserRole role, double width) {
     if (role == UserRole.admin) {
       return [
-        _secondaryAction(context, 'Data Capster', Icons.people_alt_outlined,
+        _secondaryAction(context, 'Data Capster', Icons.people_alt_rounded,
             CapsterScreen.routeName, width),
-        _secondaryAction(
-            context,
-            'Akun Pengguna',
-            Icons.manage_accounts_outlined,
-            AkunPenggunaScreen.routeName,
-            width),
-        _secondaryAction(context, 'Data Layanan',
-            Icons.design_services_outlined, LayananScreen.routeName, width),
-        _secondaryAction(context, 'Laporan Hasil', Icons.table_chart_outlined,
+        _secondaryAction(context, 'Akun Pengguna',
+            Icons.manage_accounts_rounded, AkunPenggunaScreen.routeName, width),
+        _secondaryAction(context, 'Data Layanan', Icons.design_services_rounded,
+            LayananScreen.routeName, width),
+        _secondaryAction(context, 'Laporan Hasil', Icons.table_chart_rounded,
             LaporanScreen.routeName, width),
       ];
     }
     if (role == UserRole.adminHarian) {
       return [
-        _secondaryAction(context, 'Input Pendapatan', Icons.payments_outlined,
+        _secondaryAction(context, 'Input Pendapatan', Icons.payments_rounded,
             PendapatanHarianScreen.routeName, width),
-        _secondaryAction(context, 'Laporan Saya', Icons.table_chart_outlined,
+        _secondaryAction(context, 'Laporan Saya', Icons.table_chart_rounded,
             LaporanScreen.routeName, width),
       ];
     }
     if (role == UserRole.pemilik) {
       return [
-        _secondaryAction(context, 'Laporan Hasil', Icons.table_chart_outlined,
-            LaporanScreen.routeName, width),
+        _secondaryAction(context, 'Laporan Hasil', Icons.table_chart_rounded,
+            LaporanScreen.routeName, width)
       ];
     }
     return [
-      _secondaryAction(context, 'Laporan Saya', Icons.table_chart_outlined,
-          LaporanScreen.routeName, width),
+      _secondaryAction(context, 'Laporan Saya', Icons.table_chart_rounded,
+          LaporanScreen.routeName, width)
     ];
   }
 
-  Widget _menuIcon(IconData icon) {
+  Widget _insightCard(_DashboardData data, bool personalView) {
     return Container(
-      width: 38,
-      height: 38,
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.panel,
-        borderRadius: BorderRadius.circular(8),
+        gradient: AppColors.softGradient,
+        borderRadius: AppTheme.radiusLarge,
+        border: Border.all(color: AppColors.line),
       ),
-      child: Icon(icon, color: AppColors.brass, size: 21),
+      child: Row(
+        children: [
+          Container(
+            width: 46,
+            height: 46,
+            decoration: BoxDecoration(
+              gradient: AppColors.goldGradient,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: const Icon(Icons.tips_and_updates_rounded,
+                color: AppColors.navy),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              personalView
+                  ? 'Pantau pendapatan dan bagian kamu secara rutin agar laporan bulanan tetap akurat.'
+                  : 'Dashboard ini membantu memantau cashflow, capster aktif, dan pembagian hasil secara cepat.',
+              style: const TextStyle(
+                  color: AppColors.charcoalSoft,
+                  fontWeight: FontWeight.w700,
+                  height: 1.35),
+            ),
+          ),
+        ],
+      ),
     );
   }
+}
+
+class _ActionData {
+  const _ActionData(
+      this.title, this.subtitle, this.icon, this.route, this.tint);
+
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final String route;
+  final Color tint;
 }
 
 class _DashboardData {
