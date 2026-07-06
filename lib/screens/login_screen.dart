@@ -57,24 +57,62 @@ class _LoginScreenState extends State<LoginScreen> {
             colors: [Color(0xFFE9FFF8), AppColors.linen, AppColors.paper],
           ),
         ),
-        child: SafeArea(
-          child: Center(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 26),
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 430),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    _brandHero(),
-                    const SizedBox(height: 18),
-                    _loginCard(),
-                    const SizedBox(height: 14),
-                    _demoAccountHint(),
-                  ],
+        child: Stack(
+          children: [
+            Positioned(
+              top: -80,
+              right: -70,
+              child:
+                  _ambientCircle(210, AppColors.teal.withValues(alpha: 0.13)),
+            ),
+            Positioned(
+              top: 190,
+              left: -90,
+              child:
+                  _ambientCircle(180, AppColors.brass.withValues(alpha: 0.12)),
+            ),
+            Positioned(
+              bottom: -95,
+              right: -40,
+              child:
+                  _ambientCircle(190, AppColors.blue.withValues(alpha: 0.08)),
+            ),
+            SafeArea(
+              child: Center(
+                child: SingleChildScrollView(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 22, vertical: 26),
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 430),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        _brandHero(),
+                        const SizedBox(height: 18),
+                        _loginCard(),
+                        const SizedBox(height: 14),
+                        _demoAccountHint(),
+                      ],
+                    ),
+                  ),
                 ),
               ),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _ambientCircle(double size, Color color) {
+    return IgnorePointer(
+      child: Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          gradient: RadialGradient(
+            colors: [color, color.withValues(alpha: 0)],
           ),
         ),
       ),

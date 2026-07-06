@@ -63,6 +63,19 @@ class AppTheme {
         ),
       ];
 
+  static List<BoxShadow> get premiumShadow => [
+        BoxShadow(
+          color: AppColors.tealDark.withValues(alpha: 0.10),
+          blurRadius: 34,
+          offset: const Offset(0, 18),
+        ),
+        BoxShadow(
+          color: AppColors.ink.withValues(alpha: 0.05),
+          blurRadius: 12,
+          offset: const Offset(0, 4),
+        ),
+      ];
+
   static ThemeData light() {
     final colorScheme = ColorScheme.fromSeed(
       seedColor: AppColors.teal,

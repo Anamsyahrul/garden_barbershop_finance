@@ -101,112 +101,154 @@ class _DashboardScreenState extends State<DashboardScreen> {
       drawer: const AppDrawer(),
       bottomNavigationBar:
           const AppBottomNav(currentRoute: DashboardScreen.routeName),
-      body: RefreshIndicator(
-        onRefresh: () async {
-          setState(() => _future = _load());
-          await _future;
-        },
-        child: FutureBuilder<_DashboardData>(
-          future: _future,
-          builder: (context, snapshot) {
-            if (!snapshot.hasData) {
-              return const Center(child: CircularProgressIndicator());
-            }
-            final data = snapshot.data!;
-            final role = data.user?.role ?? UserRole.admin;
-            final personalView =
-                role == UserRole.capster || role == UserRole.adminHarian;
-            return ListView(
-              padding: const EdgeInsets.fromLTRB(16, 10, 16, 96),
-              children: [
-                _primaryBalance(data),
-                const SizedBox(height: 16),
-                LayoutBuilder(
-                  builder: (context, constraints) {
-                    final itemWidth = constraints.maxWidth >= 720
-                        ? (constraints.maxWidth - 24) / 3
-                        : (constraints.maxWidth - 12) / 2;
-                    return Wrap(
-                      spacing: 12,
-                      runSpacing: 12,
-                      children: [
-                        SizedBox(
-                          width: itemWidth,
-                          child: CompactMetricCard(
-                            title: personalView
-                                ? 'Beban Operasional'
-                                : 'Operasional',
-                            value:
-                                CurrencyFormatter.format(data.totalOperasional),
-                            icon: Icons.receipt_long_rounded,
-                            tint: AppColors.brass,
-                          ),
-                        ),
-                        SizedBox(
-                          width: itemWidth,
-                          child: CompactMetricCard(
-                            title:
-                                personalView ? 'Akun Capster' : 'Capster Aktif',
-                            value: personalView
-                                ? (data.user?.name ?? '-')
-                                : '${data.jumlahCapsterAktif} orang',
-                            icon: Icons.groups_2_rounded,
-                            tint: AppColors.blue,
-                          ),
-                        ),
-                        SizedBox(
-                          width: itemWidth,
-                          child: CompactMetricCard(
-                            title:
-                                personalView ? 'Bagian Saya' : 'Bagian Pondok',
-                            value: CurrencyFormatter.format(
-                              personalView
-                                  ? data.totalBagianCapster
-                                  : data.totalBagianPondok,
-                            ),
-                            icon: Icons.savings_rounded,
-                            tint: AppColors.teal,
-                          ),
-                        ),
-                      ],
-                    );
-                  },
-                ),
-                const SizedBox(height: 20),
-                PremiumSectionTitle(
-                  title: 'Menu Utama',
-                  subtitle: 'Akses fitur yang paling sering dipakai',
-                  action: TextButton.icon(
-                    onPressed: () => setState(() => _future = _load()),
-                    icon: const Icon(Icons.sync_rounded, size: 18),
-                    label: const Text('Sync'),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                ..._mainActions(context, role),
-                const SizedBox(height: 20),
-                PremiumSectionTitle(
-                  title: 'Kelola Data',
-                  subtitle: 'Menu administrasi dan laporan',
-                ),
-                const SizedBox(height: 12),
-                LayoutBuilder(
-                  builder: (context, constraints) {
-                    final width = constraints.maxWidth >= 640
-                        ? (constraints.maxWidth - 12) / 2
-                        : constraints.maxWidth;
-                    return Wrap(
-                      spacing: 12,
-                      runSpacing: 12,
-                      children: _secondaryActions(context, role, width),
-                    );
-                  },
-                ),
-                const SizedBox(height: 18),
-                _insightCard(data, personalView),
-              ],
-            );
+      body: _dashboardBackground(
+        child: RefreshIndicator(
+          onRefresh: () async {
+            setState(() => _future = _load());
+            await _future;
           },
+          child: FutureBuilder<_DashboardData>(
+            future: _future,
+            builder: (context, snapshot) {
+              if (!snapshot.hasData) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              final data = snapshot.data!;
+              final role = data.user?.role ?? UserRole.admin;
+              final personalView =
+                  role == UserRole.capster || role == UserRole.adminHarian;
+              return ListView(
+                padding: const EdgeInsets.fromLTRB(16, 10, 16, 96),
+                children: [
+                  _primaryBalance(data),
+                  const SizedBox(height: 16),
+                  LayoutBuilder(
+                    builder: (context, constraints) {
+                      final itemWidth = constraints.maxWidth >= 720
+                          ? (constraints.maxWidth - 24) / 3
+                          : (constraints.maxWidth - 12) / 2;
+                      return Wrap(
+                        spacing: 12,
+                        runSpacing: 12,
+                        children: [
+                          SizedBox(
+                            width: itemWidth,
+                            child: CompactMetricCard(
+                              title: personalView
+                                  ? 'Beban Operasional'
+                                  : 'Operasional',
+                              value: CurrencyFormatter.format(
+                                  data.totalOperasional),
+                              icon: Icons.receipt_long_rounded,
+                              tint: AppColors.brass,
+                            ),
+                          ),
+                          SizedBox(
+                            width: itemWidth,
+                            child: CompactMetricCard(
+                              title: personalView
+                                  ? 'Akun Capster'
+                                  : 'Capster Aktif',
+                              value: personalView
+                                  ? (data.user?.name ?? '-')
+                                  : '${data.jumlahCapsterAktif} orang',
+                              icon: Icons.groups_2_rounded,
+                              tint: AppColors.blue,
+                            ),
+                          ),
+                          SizedBox(
+                            width: itemWidth,
+                            child: CompactMetricCard(
+                              title: personalView
+                                  ? 'Bagian Saya'
+                                  : 'Bagian Pondok',
+                              value: CurrencyFormatter.format(
+                                personalView
+                                    ? data.totalBagianCapster
+                                    : data.totalBagianPondok,
+                              ),
+                              icon: Icons.savings_rounded,
+                              tint: AppColors.teal,
+                            ),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 20),
+                  PremiumSectionTitle(
+                    title: 'Menu Utama',
+                    subtitle: 'Akses fitur yang paling sering dipakai',
+                    action: TextButton.icon(
+                      onPressed: () => setState(() => _future = _load()),
+                      icon: const Icon(Icons.sync_rounded, size: 18),
+                      label: const Text('Sync'),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  ..._mainActions(context, role),
+                  const SizedBox(height: 20),
+                  PremiumSectionTitle(
+                    title: 'Kelola Data',
+                    subtitle: 'Menu administrasi dan laporan',
+                  ),
+                  const SizedBox(height: 12),
+                  LayoutBuilder(
+                    builder: (context, constraints) {
+                      final width = constraints.maxWidth >= 640
+                          ? (constraints.maxWidth - 12) / 2
+                          : constraints.maxWidth;
+                      return Wrap(
+                        spacing: 12,
+                        runSpacing: 12,
+                        children: _secondaryActions(context, role, width),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 18),
+                  _insightCard(data, personalView),
+                ],
+              );
+            },
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _dashboardBackground({required Widget child}) {
+    return Stack(
+      children: [
+        Positioned(
+          top: -120,
+          right: -90,
+          child: _ambientGlow(240, AppColors.teal.withValues(alpha: 0.13)),
+        ),
+        Positioned(
+          top: 220,
+          left: -120,
+          child: _ambientGlow(210, AppColors.brass.withValues(alpha: 0.11)),
+        ),
+        Positioned(
+          bottom: -150,
+          right: -80,
+          child: _ambientGlow(260, AppColors.blue.withValues(alpha: 0.07)),
+        ),
+        child,
+      ],
+    );
+  }
+
+  Widget _ambientGlow(double size, Color color) {
+    return IgnorePointer(
+      child: Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          gradient: RadialGradient(
+            colors: [color, color.withValues(alpha: 0)],
+          ),
         ),
       ),
     );
