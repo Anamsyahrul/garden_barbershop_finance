@@ -90,8 +90,6 @@ class _LoginScreenState extends State<LoginScreen> {
                         _brandHero(),
                         const SizedBox(height: 18),
                         _loginCard(),
-                        const SizedBox(height: 14),
-                        _demoAccountHint(),
                       ],
                     ),
                   ),
@@ -152,8 +150,17 @@ class _LoginScreenState extends State<LoginScreen> {
                       border: Border.all(
                           color: Colors.white.withValues(alpha: 0.28)),
                     ),
-                    child: const Icon(Icons.content_cut_rounded,
-                        color: Colors.white, size: 31),
+                    child: const Center(
+                      child: Text(
+                        'G',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 28,
+                          fontWeight: FontWeight.w900,
+                          height: 1.1,
+                        ),
+                      ),
+                    ),
                   ),
                   const Spacer(),
                   Container(
@@ -278,33 +285,6 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _demoAccountHint() {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: AppColors.mint,
-        borderRadius: AppTheme.radiusMedium,
-        border: Border.all(color: AppColors.teal.withValues(alpha: 0.16)),
-      ),
-      child: const Row(
-        children: [
-          Icon(Icons.info_outline_rounded, color: AppColors.tealDark),
-          SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              'Demo cepat: admin / admin123, senior / senior123, diva / capster123, pemilik / pemilik123.',
-              style: TextStyle(
-                  color: AppColors.tealDark,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 12.5,
-                  height: 1.35),
-            ),
-          ),
-        ],
       ),
     );
   }
