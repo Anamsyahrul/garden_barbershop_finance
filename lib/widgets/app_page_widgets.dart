@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../theme/app_theme.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 class AppPageHeader extends StatelessWidget {
   const AppPageHeader({
@@ -75,7 +76,7 @@ class AppPageHeader extends StatelessWidget {
           ),
         ],
       ),
-    );
+    ).animate().fade(duration: 500.ms).slideY(begin: 0.1, end: 0, curve: Curves.easeOutQuad, delay: 100.ms);
   }
 }
 
@@ -165,7 +166,7 @@ class PremiumSectionTitle extends StatelessWidget {
         ),
         if (action != null) action!,
       ],
-    );
+    ).animate().fade(duration: 400.ms);
   }
 }
 
@@ -258,7 +259,7 @@ class MobileInfoTile extends StatelessWidget {
           ),
         ),
       ),
-    );
+    ).animate().fade(duration: 400.ms).slideY(begin: 0.05, end: 0, curve: Curves.easeOutQuad);
   }
 }
 
@@ -334,7 +335,7 @@ class CompactMetricCard extends StatelessWidget {
           ),
         ],
       ),
-    );
+    ).animate().fade(duration: 400.ms).scale(begin: const Offset(0.95, 0.95), end: const Offset(1, 1), curve: Curves.easeOutBack);
   }
 }
 
@@ -412,7 +413,7 @@ class AppSectionCard extends StatelessWidget {
           ...children,
         ],
       ),
-    );
+    ).animate().fade(duration: 500.ms).slideY(begin: 0.1, end: 0, curve: Curves.easeOutQuad);
   }
 }
 

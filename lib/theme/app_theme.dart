@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class AppColors {
   static const ink = Color(0xFF071B1F);
@@ -49,25 +50,25 @@ class AppTheme {
 
   static List<BoxShadow> get softShadow => [
         BoxShadow(
-          color: AppColors.ink.withValues(alpha: 0.07),
-          blurRadius: 24,
+          color: AppColors.ink.withValues(alpha: 0.035),
+          blurRadius: 32,
           offset: const Offset(0, 12),
         ),
       ];
 
   static List<BoxShadow> get floatingShadow => [
         BoxShadow(
-          color: AppColors.tealDark.withValues(alpha: 0.18),
-          blurRadius: 28,
-          offset: const Offset(0, 16),
+          color: AppColors.teal.withValues(alpha: 0.25),
+          blurRadius: 36,
+          offset: const Offset(0, 18),
         ),
       ];
 
   static List<BoxShadow> get premiumShadow => [
         BoxShadow(
-          color: AppColors.tealDark.withValues(alpha: 0.10),
-          blurRadius: 34,
-          offset: const Offset(0, 18),
+          color: AppColors.tealDark.withValues(alpha: 0.08),
+          blurRadius: 40,
+          offset: const Offset(0, 20),
         ),
         BoxShadow(
           color: AppColors.ink.withValues(alpha: 0.05),
@@ -91,7 +92,6 @@ class AppTheme {
       colorScheme: colorScheme,
       useMaterial3: true,
       scaffoldBackgroundColor: AppColors.linen,
-      fontFamily: 'Roboto',
       visualDensity: VisualDensity.adaptivePlatformDensity,
       appBarTheme: const AppBarTheme(
         centerTitle: false,
@@ -124,7 +124,7 @@ class AppTheme {
         backgroundColor: AppColors.paper,
         surfaceTintColor: Colors.transparent,
       ),
-      textTheme: const TextTheme(
+      textTheme: GoogleFonts.plusJakartaSansTextTheme(const TextTheme(
         bodyLarge: TextStyle(color: AppColors.charcoal, height: 1.35),
         bodyMedium: TextStyle(color: AppColors.charcoal, height: 1.35),
         bodySmall: TextStyle(color: AppColors.muted, height: 1.35),
@@ -134,7 +134,7 @@ class AppTheme {
             TextStyle(color: AppColors.charcoal, fontWeight: FontWeight.w800),
         titleSmall:
             TextStyle(color: AppColors.charcoal, fontWeight: FontWeight.w700),
-      ),
+      )),
       inputDecorationTheme: InputDecorationTheme(
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(18),

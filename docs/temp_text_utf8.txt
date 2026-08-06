@@ -1,0 +1,399 @@
+PROPOSAL SKRIPSI
+RANCANG BANGUN APLIKASI ANDROID PENGELOLAAN PENDAPATAN DAN PEMBAGIAN HASIL CAPSTER PADA GARDEN BARBERSHOP BERBASIS FIREBASE
+Diajukan Untuk Memenuhi Salah Satu Syarat
+Memperoleh Gelar Sarjana Komputer – S1
+Oleh:
+Syahrul Anam
+42322006
+PROGRAM STUDI SISTEM INFORMASI
+FAKULTAS SAINS DAN TEKNOLOGI
+UNIVERSITAS PERADABAN
+2026
+PERSETUJUAN PROPOSAL SKRIPSI
+DAFTAR ISI
+DAFTAR TABEL
+Tabel 2.1 Rujukan Penelitian	12
+Tabel 2.2 Use Case Diagram	23
+Tabel 2.3 Activity Diagram	24
+Tabel 2.4 Sequence Diagram	26
+Tabel 2.5 Class Diagram	27
+Tabel 2.6 Entity Relation Diagram (ERD)	28
+Tabel 3.1 Jadwal Penelitian	41
+Tabel 4.1 Deskripsi Use Case Login	53
+Tabel 4.2 Deskripsi Use Case Kelola Akun Pengguna	53
+Tabel 4.3 Deskripsi Use Case Kelola Data Capster	54
+Tabel 4.4 Deskripsi Use Case Kelola Data Layanan	54
+Tabel 4.5 Deskripsi Use Case Input Pendapatan Harian	55
+Tabel 4.6 Deskripsi Use Case Kelola Biaya Operasional	55
+Tabel 4.7 Deskripsi Use Case Kelola Buku Kas Umum	56
+Tabel 4. 8 Deskripsi Use Case Lihat Laporan Bulanan	56
+DAFTAR GAMBAR
+Gambar 2.1 Metode Waterfall	30
+Gambar 2.2 Black Box Testing	32
+Gambar 2.3 Kerangka Berpikir	33
+Gambar 3.1 Tahapan Penelitian	35
+Gambar 3.2 Tempat Penelitian	40
+Gambar 3.3 Halaman Login	42
+Gambar 3.4 Dashboard Admin	43
+Gambar 3.5 Input Pendapatan Harian	44
+Gambar 3.6 Buku Kas Umum	45
+Gambar 3.7 Input Operasional	46
+Gambar 3.8 Laporan Pembagian Hasil	47
+Gambar 3.9 Kelola Akun Pengguna	48
+Gambar 4.1 Use Case Diagram	52
+Gambar 4.2 Activity Diagram Login	57
+Gambar 4.3 Activity Diagram Kelola Akun Pengguna	58
+Gambar 4.4 Activity Diagram Kelola Data Capster	59
+Gambar 4.5 Activity Diagram Kelola Data Layanan	60
+Gambar 4.6 Activity Diagram Input Pendapatan Harian	61
+Gambar 4.7 Activity Diagram Kelola Biaya Operasional	62
+Gambar 4.8 Activity Diagram Kelola Buku Kas	63
+Gambar 4.9 Activity Diagram Lihat Laporan Bulanan	64
+Gambar 4.10 Class Diagram	65
+Gambar 4.11 Entity Relationship Diagram	66
+BAB I
+PENDAHULUAN
+1.1.  Latar Belakang
+Perkembangan teknologi informasi yang semakin pesat telah memberikan pengaruh signifikan terhadap berbagai bidang usaha, termasuk industri jasa potong rambut (barbershop). Pemanfaatan teknologi informasi dapat membantu pelaku usaha dalam melakukan pencatatan transaksi, pengolahan data, dan penyusunan laporan secara lebih terstruktur dan efisien. Hal ini sejalan dengan penelitian Refwahajan dan Waluyo yang mengembangkan aplikasi Android untuk membantu pemesanan layanan . Rohmat dkk. juga mengembangkan aplikasi penjadwalan barbershop berbasis Android untuk mengurangi proses pendataan manual . Lebih lanjut, penelitian Bahtiar dkk.  dan Yurindra dkk.  menunjukkan bahwa penerapan sistem informasi pada barbershop dapat mengoptimalkan penyampaian informasi dan mengelola antrean pelanggan secara real-time.
+Garden Barbershop merupakan salah satu entitas usaha jasa potong rambut yang memiliki tingkat mobilitas dan kunjungan pelanggan yang tinggi. Berdasarkan hasil observasi, Garden Barbershop melayani rata-rata 30 hingga 50 pelanggan setiap harinya. Tingginya volume kunjungan tersebut menghasilkan lebih dari 900 pencatatan transaksi dalam satu bulan beroperasi. Volume transaksi yang besar ini menuntut adanya pencatatan yang presisi terkait pendapatan kotor bulanan, beban biaya operasional, serta transparansi pembagian hasil antara pihak pengelola pondok dan para pekerja (capster).
+Pada sistem yang berjalan saat ini, Garden Barbershop masih mengandalkan pencatatan semi-manual menggunakan aplikasi Google Spreadsheet. Penggunaan lembar kerja tersebut pada awalnya dinilai cukup membantu, namun memiliki berbagai keterbatasan ketika dihadapkan pada volume 900 transaksi per bulan. Keterbatasan utama meliputi struktur kolom yang rentan berubah, risiko kesalahan input data oleh pekerja, serta kemungkinan terhapusnya formula perhitungan secara tidak sengaja. Selain itu, lembar kerja manual tidak memiliki batasan hak akses yang tegas, sehingga rentan terhadap ketidaksesuaian pencatatan maupun manipulasi data omzet. Oleh karena itu, Garden Barbershop membutuhkan sebuah sistem pencatatan terpusat yang aman dan memiliki rekam jejak (history) yang permanen.
+Dalam pelaksanaan operasional harian di Garden Barbershop, tidak selalu terdapat kasir khusus yang bersiaga untuk memasukkan data transaksi. Oleh sebab itu, peran pengelolaan dan pencatatan transaksi dipegang langsung oleh pihak Admin (pemilik atau pengelola utama) melalui aplikasi. Sementara itu, para capster hanya diberikan hak akses terbatas untuk melihat riwayat transaksi dan laporan pendapatan mereka sendiri. Pembagian hak akses (role-based access) yang terstruktur ini dirancang untuk meminimalisir kesalahan pencatatan dan menjaga keamanan data keuangan usaha.
+Berdasarkan permasalahan yang telah diuraikan, maka diusulkan perancangan sebuah aplikasi Android bernama "Garden Barbershop Finance" yang dikembangkan menggunakan framework Flutter dan bahasa pemrograman Dart. Aplikasi ini akan memanfaatkan layanan Firebase sebagai basis data awan (cloud database) untuk menyimpan data pengguna, layanan, pendapatan harian, operasional, dan buku kas secara terpusat. Oleh karena itu, penelitian ini diwujudkan dengan judul "Rancang Bangun Aplikasi Android Pengelolaan Pendapatan dan Pembagian Hasil Capster pada Garden Barbershop Berbasis Firebase", yang diharapkan mampu memfasilitasi pencatatan keuangan dan pembagian komisi capster secara terstruktur, adil, dan transparan.
+1.2.  Rumusan Masalah
+Berdasarkan latar belakang yang telah diuraikan, maka dapat dirumuskan permasalahan dalam penelitian ini, yaitu bagaimana merancang dan membangun aplikasi Android pengelolaan pendapatan dan pembagian hasil capster pada Garden Barbershop berbasis Firebase yang mampu mengelola pencatatan pendapatan harian, buku kas umum, biaya operasional, pengaturan hak akses pengguna, serta laporan pembagian hasil capster.
+1.3.  Batasan Masalah
+Agar sistem yang dikembangkan lebih terarah dan fokus pada tujuan utama, maka batasan masalah dalam penelitian ini adalah sebagai berikut :
+Aplikasi berbasis Android digunakan oleh pengguna internal yang terdiri atas Admin/Pengelola, Admin Harian, Capster, dan Pemilik.
+Admin Harian merupakan capster senior yang dipercaya untuk melakukan input transaksi pendapatan harian apabila tidak terdapat admin khusus di lokasi.
+Capster biasa hanya dapat melihat riwayat transaksi dan laporan miliknya sendiri, serta tidak diberi hak akses untuk menambah, mengubah, atau menghapus transaksi pendapatan.
+Firebase Authentication digunakan untuk autentikasi pengguna, sedangkan Cloud Firestore digunakan sebagai database utama.
+Sistem tidak membahas pemesanan pelanggan, antrean pelanggan, pembayaran online, sistem kasir penuh, serta pengelolaan stok produk.
+Pengujian sistem dilakukan menggunakan metode Black Box Testing pada fungsi utama aplikasi.
+1.4.  Tujuan Penelitian
+Berdasarkan rumusan masalah yang telah diuraikan, maka tujuan dari penelitian ini yaitu merancang dan membangun aplikasi Android pengelolaan pendapatan dan pembagian hasil capster pada Garden Barbershop berbasis Firebase. Aplikasi ini diharapkan mampu menerapkan autentikasi pengguna, penyimpanan data pada Cloud Firestore, pencatatan pendapatan harian, buku kas umum, biaya operasional, serta perhitungan pembagian hasil capster dan bagian pondok.
+1.5.   Manfaat Penelitian
+Penelitian ini diharapkan dapat memberikan manfaat yang berguna bagi masing-masing pihak antara lain :
+1. Bagi Penulis
+Menambah wawasan dan pengalaman dalam merancang serta mengembangkan aplikasi berbasis Android menggunakan framework Flutter.
+Memahami penerapan Firebase Authentication dan Cloud Firestore pada aplikasi Android.
+Meningkatkan kemampuan dalam melakukan analisis kebutuhan sistem, perancangan sistem, implementasi, serta pengujian perangkat lunak menggunakan metode Black Box Testing.
+2. Bagi Pengelola Garden Barbershop
+Membantu mempermudah proses pencatatan pendapatan harian capster secara lebih terstruktur dan efisien melalui Admin/Pengelola atau Admin Harian.
+Mengurangi risiko kesalahan input data dan manipulasi pencatatan pendapatan melalui pembatasan hak akses serta pencatatan identitas penginput.
+Membantu proses perhitungan biaya operasional, pendapatan bersih, bagian capster, dan bagian pondok secara lebih sistematis.
+Mempermudah pemilik dalam memantau laporan pendapatan, buku kas umum, dan laporan pembagian hasil capster.
+3. Bagi Akademik
+Menambah referensi akademik dalam bidang pengembangan sistem informasi berbasis Android dengan Firebase.
+Menjadi bahan rujukan bagi mahasiswa Program Studi Sistem Informasi Universitas Peradaban dalam melakukan penelitian sejenis.
+Memberikan kontribusi terhadap pengembangan kajian akademik mengenai pemanfaatan Firebase Authentication, Cloud Firestore, dan pembatasan hak akses pengguna pada aplikasi mobile.
+1.6.   Sistematika Penulisan
+Sistematika penulisan penelitian ini disusun dalam 5 bab yang dijabarkan sebagai berikut:
+BAB 1 : PENDAHULUAN
+Bab ini menjelaskan tentang latar belakang, rumusan masalah, tujuan penelitian, manfaat penelitian, ruang lingkup dan sistematika penulisan.
+BAB 2 : TINJAUAN PUSTAKA
+Bab ini berisi penjelasan mengenai penelitian terdahulu yang berkaitan dan teori-teori dasar atau pendukung yang berhubungan dengan penelitian ini.
+BAB 3 : METODE PENELITIAN
+Bab ini berisi penjelasan mengenai jadwal penelitian, tahapan penelitian dan metode yang digunakan dalam pengembangan sistem.
+BAB 4 : PEMBAHASAN DAN HASIL
+Bab ini menjelaskan mengenai sistem serta menyampaikan hasil yang diperoleh dari kegiatan penelitian dan hasil pengujian sistem yang dibangun.
+BAB 5 : PENUTUP
+Bab ini merupakan bagian akhir yang berisi kesimpulan dari hasil penelitian serta saran untuk pengembangan lebih lanjut.
+BAB II
+TINJAUAN PUSTAKA
+2.1.   Penelitian Terkait
+Penyusunan skripsi ini didasarkan pada berbagai referensi dan hasil penelitian sebelumnya yang memiliki keterkaitan dengan permasalahan yang diteliti. Penelitian-penelitian terdahulu tersebut tidak hanya dijadikan sebagai sumber referensi, tetapi juga sebagai landasan dalam menentukan arah serta memperkuat relevansi penelitian yang dilakukan. Beberapa penelitian terdahulu yang berkaitan dengan topik penelitian ini disajikan pada Tabel 2.1 berikut.
+Tabel 2.1 Rujukan Penelitian
+Berdasarkan rujukan penelitian yang telah disajikan, aplikasi barbershop berbasis Android telah digunakan pada beberapa kebutuhan yang berbeda. Refwahajan dan Waluyo menekankan aplikasi untuk pemesanan layanan, pemilihan barberman, dan pemilihan waktu layanan . Rohmat dkk. meneliti aplikasi pemesanan online barbershop dengan metode Waterfall dan pengujian Black Box Testing . Bahtiar dkk. membahas aplikasi barbershop untuk membantu pengguna memperoleh informasi, memilih layanan, serta melakukan pemesanan jasa barbershop  . Yurindra dkk. mengembangkan aplikasi Android berbasis client server untuk membantu pelanggan melihat dan memesan antrean barbershop secara real time . Berdasarkan perbandingan tersebut, penelitian ini memiliki perbedaan karena tidak berfokus pada booking pelanggan atau antrean, melainkan pada pengelolaan internal Garden Barbershop yang meliputi pencatatan pendapatan harian capster, buku kas umum, biaya operasional, pembagian hasil, role pengguna, dan pembatasan akses agar capster biasa hanya dapat melihat laporan miliknya sendiri.
+2.2.  Teori yang Berhubungan Dengan Sistem
+Teori yang berhubungan dengan sistem secara umum meliputi rancang bangun, sistem informasi, aplikasi Android, pengelolaan pendapatan, buku kas umum, pembagian hasil capster, pengendalian akses pengguna, Firebase, Firebase Authentication, Cloud Firestore, dan NoSQL Database.
+2.2.1.  Rancang Bangun
+Rancang bangun merupakan proses merencanakan, merancang, membuat, dan menguji suatu sistem berdasarkan kebutuhan yang telah dianalisis . Pada penelitian aplikasi barbershop, proses rancang bangun digunakan untuk menghasilkan aplikasi yang sesuai dengan kebutuhan objek penelitian, seperti pemesanan layanan , pemesanan online berbasis Android , penyampaian informasi dan pemesanan jasa barbershop , serta layanan antrean berbasis client server . Pada penelitian ini, rancang bangun dilakukan untuk menghasilkan aplikasi Garden Barbershop Finance berbasis Android yang digunakan dalam pengelolaan pendapatan, buku kas umum, operasional, dan laporan pembagian hasil capster.
+2.2.2.  Sistem Informasi
+Sistem informasi merupakan kumpulan komponen yang saling berhubungan untuk mengumpulkan data, mengolah data, menyimpan data, dan menghasilkan informasi yang bermanfaat bagi proses bisnis . Dalam penelitian terdahulu pada bidang barbershop, sistem berbasis Android digunakan untuk membantu proses layanan dan pengelolaan informasi, seperti pemesanan layanan , pemesanan online , informasi layanan barbershop , dan informasi antrean secara real time . Pada penelitian ini, sistem informasi digunakan untuk mengelola data pendapatan, buku kas umum, biaya operasional, akun pengguna, serta laporan pembagian hasil capster.
+2.2.3.  Aplikasi Android
+Aplikasi Android merupakan perangkat lunak yang berjalan pada perangkat mobile berbasis sistem operasi Android . Aplikasi Android dapat digunakan sebagai media input data dan akses sistem karena perangkat mobile mudah dibawa dan digunakan dalam aktivitas operasional harian. Pada penelitian terdahulu, aplikasi Android digunakan untuk membantu pemesanan layanan barbershop , pemesanan online untuk mengurangi antrean dan pendataan manual , penyampaian informasi serta pemesanan jasa barbershop , dan layanan antrean berbasis client server .
+2.2.4.  Pengelolaan Pendapatan
+Pengelolaan pendapatan pada usaha jasa merupakan proses pencatatan penerimaan dari layanan yang diberikan kepada pelanggan . Pada Garden Barbershop, pendapatan dicatat berdasarkan capster, jenis layanan, jumlah customer, dan total pendapatan harian. Data pendapatan harian tersebut menjadi dasar untuk menghitung pendapatan kotor bulanan setiap capster. Berbeda dari penelitian aplikasi barbershop terdahulu yang lebih banyak membahas pemesanan layanan , , informasi dan pemesanan jasa , serta antrean pelanggan , penelitian ini menempatkan pengelolaan pendapatan dan pembagian hasil capster sebagai fokus utama sistem internal.
+2.2.5.  Buku Kas Umum
+Buku kas umum merupakan catatan yang digunakan untuk merekam penerimaan, pengeluaran, saldo, akun, dan keterangan transaksi . Pada Garden Barbershop, buku kas umum digunakan untuk mencatat pendapatan usaha, pendapatan lainnya, pengeluaran, biaya operasional, dan saldo kas. Dalam rancangan aplikasi, akun Pendapatan Usaha tidak diambil dari seluruh pendapatan kotor layanan, tetapi dari total bagian pondok yang dihasilkan melalui perhitungan pembagian hasil.
+2.2.6.  Pembagian Hasil Capster
+Pembagian hasil capster merupakan proses perhitungan bagian pendapatan yang diterima capster dan bagian yang diterima pihak pondok . Pada Garden Barbershop, perhitungan dimulai dari pendapatan kotor capster dalam satu bulan. Total biaya operasional bulanan kemudian dibagi rata kepada seluruh capster aktif. Beban operasional per capster tersebut dikurangkan dari pendapatan kotor capster untuk menghasilkan pendapatan bersih. Pendapatan bersih kemudian dibagi dengan persentase 50% untuk capster dan 50% untuk pihak pondok.
+Beban Operasional Per Capster = Total Operasional Bulanan / Jumlah Capster Aktif
+Pendapatan Bersih Capster = Pendapatan Kotor Capster - Beban Operasional Per Capster
+Bagian Capster = Pendapatan Bersih Capster x 50%
+Bagian Pondok = Pendapatan Bersih Capster x 50%
+Pada aplikasi yang dikembangkan, total bagian pondok dari seluruh capster pada periode tertentu digunakan sebagai nilai penerimaan akun Pendapatan Usaha pada buku kas umum. Dengan demikian, buku kas umum mencerminkan pendapatan yang menjadi bagian pihak pondok setelah proses pembagian hasil dilakukan.
+2.2.7.  Pengendalian Akses Pengguna
+Pengendalian akses pengguna merupakan pembatasan hak akses berdasarkan peran pengguna dalam sistem. Pengendalian akses diperlukan agar pengguna hanya dapat melakukan fungsi yang sesuai dengan tanggung jawabnya . Pada penelitian ini, Admin/Pengelola memiliki hak penuh untuk mengelola data, membuat akun, mengubah password, dan melihat seluruh laporan. Admin Harian atau capster senior yang dipercaya dapat membantu proses input pendapatan harian. Capster biasa hanya dapat melihat riwayat dan laporan miliknya sendiri, sedangkan Pemilik dapat melihat laporan usaha. Pembagian hak akses tersebut digunakan untuk mengurangi risiko pencatatan yang tidak sesuai dengan transaksi sebenarnya.
+2.2.8.  Firebase
+Firebase merupakan platform pengembangan aplikasi yang menyediakan layanan backend untuk mendukung kebutuhan aplikasi mobile . Dalam penelitian ini, Firebase digunakan sebagai layanan utama untuk autentikasi pengguna dan penyimpanan data aplikasi. Penggunaan Firebase dipilih karena sistem yang dikembangkan membutuhkan penyimpanan data terpusat dan pengaturan hak akses pengguna pada aplikasi Garden Barbershop Finance.
+2.2.9.  Firebase Authentication
+Firebase Authentication merupakan layanan autentikasi yang disediakan oleh Firebase untuk membantu pengembang membangun proses login pengguna . Pada penelitian ini, Firebase Authentication digunakan untuk mengelola login pengguna dengan role Admin/Pengelola, Admin Harian, Capster, dan Pemilik. Pembagian role tersebut digunakan untuk membatasi hak akses agar proses input pendapatan hanya dilakukan oleh pihak yang diberi kewenangan.
+2.2.10.  Cloud Firestore
+Cloud Firestore merupakan layanan database berbasis Cloud dari Firebase yang dapat digunakan untuk menyimpan data aplikasi secara online . Pada penelitian ini, Cloud Firestore digunakan untuk menyimpan data capster, layanan, pendapatan harian, buku kas umum, operasional, akun pengguna, dan laporan pembagian hasil. Pemilihan Cloud Firestore menyesuaikan kebutuhan aplikasi yang tidak menggunakan database server lokal seperti MySQL atau PostgreSQL.
+2.2.11.  NoSQL Database
+NoSQL Database merupakan model basis data yang tidak selalu menggunakan struktur tabel relasional . Cloud Firestore menyimpan data dalam bentuk koleksi dan dokumen sehingga struktur data dapat disesuaikan dengan kebutuhan aplikasi. Pendekatan ini digunakan pada penelitian karena data aplikasi Garden Barbershop terdiri atas beberapa kelompok data seperti pengguna, capster, layanan, transaksi, operasional, dan laporan.
+2.3.   Teori Pendukung Lainnya
+Teori pendukung lainnya digunakan untuk menjelaskan perangkat lunak dan teknologi yang membantu proses pengembangan aplikasi. Teori pendukung pada penelitian ini meliputi Flutter, Dart, SharedPreferences, Figma, Visual Studio Code, Browser, dan Draw.io.
+2.3.1.  Flutter
+Flutter merupakan framework yang digunakan untuk membangun aplikasi mobile dengan tampilan antarmuka yang konsisten dan responsif . Rujukan penelitian Refwahajan dan Waluyo menunjukkan bahwa Flutter digunakan dalam pengembangan aplikasi barbershop berbasis Android bersama teknologi pendukung lain seperti PHP, Laravel, dan MySQL . Pada penelitian ini, Flutter digunakan sebagai framework utama dalam pengembangan aplikasi Garden Barbershop Finance.
+2.3.2.  Dart
+Dart merupakan bahasa pemrograman yang digunakan pada framework Flutter . Dart digunakan untuk menulis logika aplikasi, pengelolaan data, validasi input, perhitungan pembagian hasil, dan integrasi dengan Firebase.
+2.3.3.  SharedPreferences
+SharedPreferences merupakan penyimpanan lokal sederhana yang digunakan untuk menyimpan data ringan pada aplikasi mobile . Pada penelitian ini, SharedPreferences dapat digunakan untuk menyimpan status sesi pengguna secara lokal agar aplikasi dapat mengenali kondisi login pengguna.
+2.3.4.  Figma
+Figma merupakan perangkat lunak yang digunakan untuk membuat rancangan antarmuka aplikasi . Dengan Figma, perancangan User Interface dapat dibuat sebelum aplikasi diimplementasikan sehingga tampilan aplikasi dapat disesuaikan dengan kebutuhan pengguna.
+2.3.5.  Visual Studio Code
+Visual Studio Code merupakan perangkat lunak editor kode yang dapat digunakan untuk menulis, mengelola, dan menjalankan kode program . Dalam penelitian ini, Visual Studio Code digunakan sebagai alat bantu pengembangan aplikasi Flutter.
+2.3.6.  Browser
+Browser merupakan perangkat lunak yang digunakan untuk mengakses layanan berbasis internet . Pada penelitian ini, browser digunakan untuk mengakses Firebase Console, melakukan konfigurasi proyek Firebase, serta mendukung proses pencarian referensi dan pengujian layanan berbasis web.
+2.3.7.  Draw.io
+Draw.io merupakan perangkat lunak berbasis web yang dapat digunakan untuk membuat diagram sistem . Pada penelitian ini, Draw.io digunakan sebagai alat bantu dalam penyusunan diagram analisis dan perancangan sistem.
+2.4.  Teori yang Berhubungan Dengan Teknik Analisis yang Digunakan
+Teori yang berhubungan dengan teknik analisis yang digunakan meliputi Unified Modeling Language. Pemodelan sistem diperlukan untuk menggambarkan kebutuhan, proses, interaksi, dan struktur data pada sistem yang dikembangkan.
+2.4.1.  UML (Unified Modeling Language)
+Pemodelan sistem merupakan suatu rancangan proses yang dipergunakan untuk membangun model dalam proses perancangan sistem. Pemodelan sistem ini dibangun agar mudah dipahami dengan menjelaskan spesifikasi bagian-bagian sistem yang akan dikembangkan. Unified Modeling Language (UML) adalah bahasa pemodelan yang digunakan untuk membuat diagram yang mewakili struktur dan perilaku sistem dalam proses analisis serta desain. Perencanaan dan pemodelan perangkat lunak merupakan komponen penting dalam proses desain sistem [6].
+a. Use Case Diagram
+Use Case Diagram merupakan salah satu diagram perilaku yang menunjukkan bagaimana pengguna berinteraksi dengan sistem . Diagram ini digunakan untuk menggambarkan aktor dan fungsi yang dapat dilakukan oleh masing-masing aktor dalam sistem. Simbol-simbol yang digunakan dalam Use Case Diagram dapat dilihat pada Tabel 2.2 berikut:
+Tabel 2.2 Use Case Diagram
+b. Activity Diagram
+Activity Diagram merupakan diagram yang digunakan untuk menjelaskan tingkah laku sistem secara dinamis dari satu aktivitas ke aktivitas lainnya . Simbol-simbol yang digunakan dalam Activity Diagram dapat dilihat pada Tabel 2.3 berikut:
+Tabel 2.3 Activity Diagram
+c. Sequence Diagram
+Sequence Diagram digunakan untuk menggambarkan interaksi antar komponen atau objek dalam suatu proses berdasarkan urutan waktu . Simbol-simbol yang digunakan dalam Sequence Diagram dapat dilihat pada Tabel 2.4 berikut:
+Tabel 2.4 Sequence Diagram
+d. Class Diagram
+Class Diagram digunakan untuk menggambarkan struktur sistem melalui kelas, atribut, metode, dan hubungan antar kelas . Simbol-simbol yang digunakan dalam Class Diagram dapat dilihat pada Tabel 2.5 berikut:
+Tabel 2.5 Class Diagram
+e. Entity Relation Diagram (ERD)
+Entity Relation Diagram (ERD) merupakan diagram yang digunakan untuk menjelaskan hubungan antara berbagai entitas dalam sebuah sistem dan menjadi dasar dalam perancangan basis data . Simbol-simbol yang digunakan dalam Entity Relation Diagram dapat dilihat pada Tabel 2.6 berikut:
+Tabel 2.6 Entity Relation Diagram (ERD)
+2.5.   Metode Pengembangan Sistem
+Metode pengembangan sistem yang digunakan dalam penelitian ini adalah Waterfall menurut Sommerville. Model Waterfall merupakan salah satu model dalam Software Development Life Cycle (SDLC) yang dilakukan secara sistematis dan berurutan. Tahapan Waterfall menurut Sommerville meliputi analisis kebutuhan, perancangan sistem, implementasi, pengujian, serta pemeliharaan atau pengoperasian sistem. Metode ini dipilih karena kebutuhan aplikasi Garden Barbershop Finance dapat diidentifikasi sejak awal berdasarkan observasi, wawancara, dan dokumentasi proses bisnis. Kesesuaian Waterfall dengan penelitian aplikasi barbershop juga terlihat pada penelitian Rohmat dkk. yang menggunakan tahapan Waterfall dalam pengembangan aplikasi pemesanan online barbershop berbasis Android .
+Gambar 2.1 Metode Waterfall
+Adapun tahapan dalam metode Waterfall menurut Sommerville yang digunakan pada penelitian ini adalah sebagai berikut:
+1. Analisis Kebutuhan
+Tahap analisis kebutuhan dilakukan untuk mengidentifikasi permasalahan dan kebutuhan sistem berdasarkan proses pencatatan pendapatan, buku kas umum, operasional, serta pembagian hasil capster pada Garden Barbershop.
+2. Perancangan Sistem
+Tahap perancangan sistem dilakukan dengan menyusun rancangan alur proses, pemodelan UML, rancangan basis data Firebase, dan rancangan antarmuka aplikasi agar sistem memiliki gambaran yang jelas sebelum diimplementasikan.
+3. Implementasi Sistem
+Tahap implementasi sistem dilakukan dengan membangun aplikasi menggunakan Flutter dan Dart serta menghubungkannya dengan Firebase Authentication dan Cloud Firestore sebagai layanan autentikasi dan penyimpanan data.
+4. Pengujian Sistem
+Tahap pengujian sistem dilakukan untuk memastikan setiap fungsi utama aplikasi berjalan sesuai kebutuhan. Pengujian difokuskan pada login, pengelolaan data, input pendapatan, input buku kas umum, input operasional, pembagian hasil, pembatasan akses pengguna, dan tampilan laporan.
+5. Pemeliharaan Sistem
+Tahap pemeliharaan dilakukan setelah sistem selesai dibuat untuk memperbaiki kesalahan yang ditemukan, menyesuaikan kebutuhan pengguna, dan menjaga agar aplikasi tetap dapat digunakan sesuai proses operasional Garden Barbershop.
+2.6.   Metode Pengujian Sistem
+Metode pengujian sistem merupakan tahapan yang dilakukan untuk memastikan bahwa sistem yang telah dikembangkan dapat berjalan sesuai dengan kebutuhan dan fungsi yang telah ditentukan. Pengujian dilakukan untuk menemukan kesalahan pada sistem serta memastikan bahwa setiap fitur dapat berfungsi dengan baik sebelum digunakan oleh pengguna.
+2.6.1.  Black Box Testing
+Black Box Testing merupakan pengujian fungsional yang dilakukan berdasarkan input dan output tanpa melihat kode program. Pengujian ini berfokus pada kesesuaian fungsi sistem terhadap kebutuhan pengguna. Pada rujukan penelitian barbershop, Rohmat dkk. menerapkan Black Box Testing untuk memastikan komponen aplikasi pemesanan online barbershop berjalan sesuai dengan hasil yang diharapkan . Konsep pengujian Black Box Testing dapat dilihat pada Gambar 2.2 berikut:
+Gambar 2.2 Black Box Testing
+Black Box Testing bertujuan untuk menemukan kesalahan pada fungsi sistem, seperti kesalahan validasi input, proses pengolahan data, serta output yang dihasilkan. Pada penelitian ini, Black Box Testing diterapkan pada fungsi login, pengelolaan akun pengguna, kelola capster, kelola layanan, input pendapatan harian oleh Admin/Pengelola atau Admin Harian, pembatasan akses input bagi Capster biasa, input buku kas umum, input operasional, perhitungan pembagian hasil, pembatasan laporan berdasarkan role, tampilan laporan, pencatatan Pendapatan Usaha dari bagian pondok, dan penyimpanan data ke Cloud Firestore.
+2.7.   Kerangka Berpikir
+Kerangka berpikir merupakan dasar dalam keseluruhan proses penelitian yang menggambarkan hubungan antara permasalahan, teori, metode, teknologi, dan hasil yang ingin dicapai. Kerangka berpikir digunakan untuk memperjelas arah penelitian agar proses pengembangan sistem sesuai dengan kebutuhan objek penelitian. Kerangka berpikir pada penelitian ini dapat dilihat pada Gambar 2.3 berikut:
+Gambar 2.3 Kerangka Berpikir
+Gambar 2.3 Penelitian ini diawali dari adanya permasalahan pada proses pencatatan pendapatan harian, buku kas umum, biaya operasional, dan pembagian hasil capster pada Garden Barbershop. Proses pencatatan yang belum didukung aplikasi khusus berisiko menyebabkan kesalahan input, keterlambatan laporan, serta potensi ketidaksesuaian pencatatan transaksi.
+Untuk mengatasi permasalahan tersebut, penelitian ini merancang dan membangun aplikasi Garden Barbershop Finance berbasis Android menggunakan Flutter dan Firebase. Sistem dilengkapi pembagian role pengguna agar Admin/Pengelola dapat mengelola seluruh data, Admin Harian atau capster senior dapat membantu input pendapatan, Capster biasa hanya dapat melihat laporan miliknya sendiri, dan Pemilik dapat memantau laporan usaha. Sistem yang dikembangkan diharapkan dapat membantu pencatatan pendapatan, pengelolaan buku kas umum, penghitungan pembagian hasil, serta penyajian laporan secara lebih terstruktur.
+BAB III
+METODE PENELITIAN
+3.1.   Tahapan Penelitian
+Tahapan penelitian yang akan dilaksanakan pada penelitian ini agar hasil yang dicapai sesuai dengan tujuan yang telah ditentukan, beberapa tahapan penelitian tersebut dapat dilihat pada Gambar 3.1 berikut:
+Gambar 3.1 Tahapan Penelitian
+Berdasarkan diagram alur penelitian yang telah disajikan, berikut merupakan penjelasan dari setiap tahapan dalam penelitian ini:
+ Identifikasi Masalah
+Tahap pertama dalam penelitian ini adalah melakukan identifikasi masalah yang terjadi pada Garden Barbershop, khususnya pada proses pencatatan pendapatan harian capster, buku kas umum, biaya operasional, serta pembagian hasil capster. Tahap ini bertujuan agar peneliti memahami permasalahan secara jelas sehingga dapat menentukan solusi yang tepat.
+ Pengumpulan Data
+Proses pengumpulan data dalam penelitian ini dilakukan melalui beberapa metode yaitu:
+Wawancara
+Metode pengumpulan data yang digunakan adalah wawancara langsung, yaitu dengan melakukan tanya jawab dengan pengelola Garden Barbershop untuk memperoleh informasi terkait proses pencatatan pendapatan, pembagian hasil capster, kendala pencatatan manual, serta kebutuhan sistem yang diinginkan.
+Observasi
+Observasi dilakukan dengan mengamati proses pencatatan dan pengelolaan laporan yang digunakan pada Garden Barbershop. Kegiatan observasi diarahkan pada alur input pendapatan harian, buku kas umum, biaya operasional, dan penyusunan laporan pembagian hasil.
+Studi Pustaka
+Studi pustaka merupakan metode pengumpulan data yang dilakukan dengan cara mencari dan mempelajari berbagai sumber yang relevan, seperti buku, artikel, jurnal, dan referensi yang berkaitan dengan aplikasi Android, sistem informasi, Firebase, metode Waterfall, serta Black Box Testing. Tujuan dari studi pustaka ini adalah untuk membangun dasar teori yang kuat sehingga dapat mendukung penelitian yang dilakukan.
+Dokumentasi
+Dokumentasi dilakukan dengan mempelajari contoh laporan Google Spreadsheet Garden Barbershop periode Mei 2026. Dokumen tersebut digunakan untuk memahami format laporan berjalan, jenis data yang dicatat, dan pola perhitungan pembagian hasil capster.
+ Analisis Kebutuhan Sistem
+Pada tahap ini dilakukan analisis terhadap data yang telah dikumpulkan untuk menentukan kebutuhan sistem. Kebutuhan tersebut meliputi pengelolaan data capster, data layanan, akun pengguna, pendapatan harian, buku kas umum, biaya operasional, pembagian hasil capster, serta pembatasan hak akses pengguna. Analisis ini bertujuan agar sistem yang dibangun sesuai dengan kebutuhan pengguna internal Garden Barbershop.
+ Perancangan Sistem
+Perancangan sistem dilakukan untuk memberikan gambaran mengenai sistem yang akan dibangun. Tahap ini meliputi perancangan alur sistem, pemodelan UML, rancangan database Firebase, dan rancangan antarmuka pengguna. Sistem dirancang berbasis aplikasi Android menggunakan Flutter dengan Firebase Authentication dan Cloud Firestore sebagai layanan backend.
+ Pengembangan Sistem
+Tahap pengembangan sistem merupakan proses implementasi dari hasil perancangan ke dalam bentuk kode program. Aplikasi dibangun menggunakan bahasa pemrograman Dart dengan framework Flutter. Fitur yang dikembangkan meliputi login pengguna, pengelolaan capster, pengelolaan layanan, input pendapatan harian, buku kas umum, biaya operasional, laporan pembagian hasil, dan pengelolaan akun pengguna.
+ Pengujian Sistem
+Tahap pengujian dilakukan untuk memastikan bahwa sistem berjalan dengan baik dan sesuai dengan kebutuhan pengguna. Pengujian dilakukan menggunakan metode Black Box Testing untuk menguji fungsi utama aplikasi berdasarkan input dan output yang dihasilkan.
+  Implementasi / Deployment
+Pada tahap ini, aplikasi yang telah selesai dikembangkan disiapkan dalam bentuk aplikasi Android yang dapat dijalankan pada perangkat smartphone. Selain itu, dilakukan konfigurasi Firebase Authentication dan Cloud Firestore agar aplikasi dapat digunakan sesuai kebutuhan pengelolaan data Garden Barbershop.
+  Evaluasi Sistem
+Tahap evaluasi dilakukan untuk menilai kinerja sistem setelah diuji dan digunakan. Jika ditemukan kekurangan atau kesalahan, maka dilakukan perbaikan untuk meningkatkan kualitas sistem agar dapat mendukung proses pengelolaan pendapatan dan pembagian hasil capster.
+  Laporan Hasil Penelitian
+Pada tahap ini penulis melakukan penyusunan laporan penelitian yang berisi seluruh proses penelitian, solusi yang diterapkan, hasil yang diperoleh, serta kesimpulan dan saran untuk pengembangan sistem ke depan.
+3.2.   Alat dan Bahan Penelitian
+Pada tahap ini memaparkan terkait alat dan bahan yang digunakan peneliti untuk mendukung proses perancangan, pengembangan, dan pengujian sistem. Alat dan bahan penelitian meliputi perangkat keras, perangkat lunak, dan bahan penelitian yang digunakan dalam penyusunan aplikasi Garden Barbershop Finance.
+Perangkat Keras (Hardware)
+Perangkat keras yang digunakan sebagai media pengembangan dan pengujian sistem adalah sebagai berikut:
+Laptop atau komputer yang digunakan untuk penulisan laporan, perancangan sistem, dan pengembangan aplikasi.
+Smartphone Android yang digunakan untuk menjalankan dan menguji aplikasi Garden Barbershop Finance.
+Perangkat Lunak (Software)
+Software yang digunakan dalam merancang dan membangun aplikasi Garden Barbershop Finance meliputi:
+Microsoft Windows 11
+Flutter dan Dart
+Android Studio atau Visual Studio Code
+Firebase Console
+Firebase Authentication
+Cloud Firestore
+Figma
+Draw.io
+Google Chrome
+Bahan Penelitian
+Bahan penelitian yang digunakan meliputi data capster, data layanan, data akun pengguna, data pendapatan harian, data buku kas umum, data biaya operasional, data laporan pembagian hasil, serta contoh laporan Google Spreadsheet Garden Barbershop periode Mei 2026.
+3.3.   Tempat dan Waktu Penelitian
+Tempat dan waktu pada penelitian yang akan dilaksanakan adalah sebagai berikut:
+3.3.1.  Tempat Penelitian
+Tempat yang dilaksanakan untuk memperoleh data pada penelitian ini, penulis mengadakan penelitian pada Garden Barbershop yang berlokasi di Desa Bangbayang, Kecamatan Bantarkawung, Kabupaten Brebes, Jawa Tengah. Dengan titik koordinat pada -7.208324,108.909269 Gambaran lokasi penelitian dapat dilihat pada Gambar 3.2 berikut:
+Gambar 3.2 Tempat Penelitian
+3.3.2.  Waktu Penelitian
+Waktu penelitian yang dilaksanakan oleh penulis yakni mulai bulan Mei sampai dengan bulan Agustus 2026.
+3.4.   Jadwal Penelitian
+Waktu penelitian dilaksanakan selama beberapa bulan dimulai dari bulan Mei hingga bulan Agustus 2026, seperti ditampilkan pada Tabel 3. 1 Jadwal Penelitian berikut:
+Tabel 3. Jadwal Penelitian
+3.5.   Gambaran Rancangan Desain Antar Muka
+Gambaran rancangan desain antar muka digunakan untuk memberikan gambaran awal mengenai tampilan aplikasi yang akan dibangun. Rancangan ini disesuaikan dengan kebutuhan utama aplikasi Garden Barbershop Finance, yaitu login pengguna, dashboard, input pendapatan harian, buku kas umum, input operasional, laporan pembagian hasil, dan pengelolaan akun pengguna.
+Gambar 3.3 Halaman Login
+Gambar 3.4 Dashboard Admin
+Gambar 3. Input Pendapatan Harian
+Gambar 3.6 Buku Kas Umum
+Gambar 3. Input Operasional
+Gambar 3. Laporan Pembagian Hasil
+Gambar 3. Kelola Akun Pengguna
+BAB IV
+HASIL DAN PEMBAHASAN
+Bab ini akan menjelaskan tahapan pengembangan sebuah aplikasi Android pengelolaan pendapatan dan pembagian hasil capster pada Garden Barbershop berbasis Firebase dengan metode pengembangan sistem yang digunakan yaitu metode waterfall. Berikut adalah implementasi Metode waterfall:
+4.1   Analisis Kebutuhan
+Analisis kebutuhan merupakan tahapan paling fundamental dalam pengembangan perangkat lunak berbasis Unified Process. Fokus utama dari fase ini adalah untuk melakukan observasi awal guna memahami kondisi sistem yang saat ini digunakan oleh objek penelitian, mengidentifikasi akar permasalahan yang menjadi hambatan, serta menentukan ruang lingkup solusi perangkat lunak yang akan dibangun.
+4.1.1  Kebutuhan Fungsional
+Kebutuhan fungsional merupakan kebutuhan yang menjelaskan proses atau layanan yang harus disediakan oleh sistem agar dapat berjalan sesuai dengan tujuan yang diharapkan. Adapun kebutuhan fungsional pada aplikasi Garden Barbershop Finance adalah sebagai berikut:
+Identifikasi Masalah
+Berdasarkan observasi menyeluruh dan wawancara mendalam yang dilakukan bersama pengelola Garden Barbershop, ditemukan bahwa inti permasalahan terletak pada pengelolaan data keuangan yang belum terdigitalisasi. Proses pencatatan pendapatan harian yang dihasilkan oleh masing-masing capster saat ini masih sepenuhnya bergantung pada buku catatan manual atau kertas struk yang rentan hilang.
+Identifikasi Sistem Berjalan
+Sebagai langkah analisis lebih lanjut, identifikasi sistem yang sedang berjalan didokumentasikan secara rinci. Mekanisme operasional bisnis di Garden Barbershop saat ini beroperasi melalui alur sebagai berikut:
+Pelanggan datang, memilih layanan potong rambut, dan dilayani oleh salah satu capster yang tersedia.
+Setelah proses selesai, pelanggan melakukan pembayaran kepada kasir atau admin.
+Admin kemudian mencatat nominal transaksi dan mencatat nama capster yang melayani ke dalam buku kas manual.
+Segala bentuk pengeluaran harian, seperti pembelian silet atau perlengkapan lainnya, juga dicatat ke dalam buku yang sama.
+Pada akhir bulan, pengelola menghitung total omzet selama satu bulan menggunakan kalkulator secara manual.
+Hasil omzet kotor tersebut dikurangi total pengeluaran operasional bulan tersebut, kemudian laba bersihnya dibagi dua sama rata (50:50).
+4.1.2  Kebutuhan Non-Fungsional
+Kebutuhan Non-Fungsional dilakukan untuk mengetahui spesifikasi kebutuhan untuk sistem. Spesifikasi kebutuhan melibatkan analisis perangkat keras (hardware) dan perangkat lunak (software).
+Analisis Kebutuhan Sistem
+Guna menyelesaikan permasalahan transparansi dan akurasi, dibutuhkan sistem berbasis digital berbentuk aplikasi mobile Android. Penggunaan platform mobile dinilai paling efektif mengingat mobilitas pekerja di barbershop yang tinggi dan kebiasaan mereka yang sangat lekat dengan smartphone.
+Fitur Sistem
+Tahapan ini menentukan fitur yang ada pada sistem, fitur pada sistem yang akan dibuat adalah sebagai berikut:
+Autentikasi Login.
+Kelola Akun Pengguna.
+Kelola Data Capster.
+Kelola Data Layanan.
+Input Pendapatan Harian.
+Kelola Biaya Operasional.
+Kelola Buku Kas Umum.
+Lihat Laporan Bulanan.
+4.2   Desain Sistem
+Desain sistem merupakan tahapan yang berperan penting dalam menganalisis sistem. pada tahapan ini, melakukan analisis kebutuhan yang lebih detail untuk memahami kebutuhan pengguna dan sistem, mengembangkan model sistem yang lebih rinci termasuk Use Case, Class Diagram, deskripsi Use Case, Activity Diagram dan desain Database dan desain User Interface. Tahapan ini melibatkan proses Requirement Workflow untuk memastikan analisis kebutuhan sistem.
+Perancangan sistem mencakup arsitektur berbasis framework Flutter dan Firebase, perancangan basis data menggunakan Cloud Firestore, serta perancangan Unified Modeling Language (UML) seperti Use Case Diagram, Activity Diagram, dan Class Diagram untuk menggambarkan alur serta proses sistem yang akan dibangun. Selain itu, perancangan antarmuka menggunakan Flutter untuk menghasilkan tampilan yang responsif pada perangkat Android. Basis data yang dirancang meliputi penyimpanan koleksi dan dokumen semua fitur.
+Analisis kebutuhan sistem yang dibuat menggunakan Use Case Diagram, Class Diagram, deskripsi Use Case untuk menggambarkan interaksi pengguna dan sistem. analisis desain database menggunakan Entity Relationship Diagram, serta merancang User Interface.
+4.2.1  Use Case Diagram
+Use case mendefinisikan interaksi aktor dan sistem untuk menguraikan fungsionalitas sistem dari perspektif pengguna. Mengelompokan kebutuhan sistem dan menggambarkan langkah-langkah yang diambil oleh aktor agar sistem dapat berfungsi dan berinteraksi dengan pengguna. Terdapat tiga peran pengguna utama, yaitu Admin Utama, Pemilik, dan Capster. Use case sistem Garden Barbershop dapat dilihat pada Gambar 4.1 berikut.
+Gambar 4.1 Use Case Diagram
+4.2.2  Deskripsi Use Case
+Deskripsi Use Case merupakan dokumen lengkap yang menggambarkan interaksi aktor dengan sistem untuk mencapai tujuan tertentu dan memenuhi kebutuhan tersebut.
+a. Login
+Berikut adalah deskripsi Use Case login yang dapat dilihat pada Tabel 4.1 berikut.
+Tabel 4.1 Deskripsi Use Case Login
+b. Kelola Akun Pengguna
+Berikut adalah deskripsi Use Case kelola akun pengguna yang dapat dilihat pada Tabel 4.2 berikut.
+Tabel 4.2 Deskripsi Use Case Kelola Akun Pengguna
+c. Kelola Data Capster
+Berikut adalah deskripsi Use Case kelola data capster yang dapat dilihat pada Tabel 4.3 berikut.
+Tabel 4.3 Deskripsi Use Case Kelola Data Capster
+d. Kelola Data Layanan
+Berikut adalah deskripsi Use Case kelola data layanan yang dapat dilihat pada Tabel 4.4 berikut.
+Tabel 4.4 Deskripsi Use Case Kelola Data Layanan
+e. Input Pendapatan Harian
+Berikut adalah deskripsi Use Case input pendapatan harian yang dapat dilihat pada Tabel 4.5 berikut.
+Tabel 4.5 Deskripsi Use Case Input Pendapatan Harian
+f. Kelola Biaya Operasional
+Berikut adalah deskripsi Use Case kelola biaya operasional yang dapat dilihat pada Tabel 4.6 berikut.
+Tabel 4.6 Deskripsi Use Case Kelola Biaya Operasional
+g. Kelola Buku Kas Umum
+Berikut adalah deskripsi Use Case kelola buku kas umum yang dapat dilihat pada Tabel 4.7 berikut.
+Tabel 4.7 Deskripsi Use Case Kelola Buku Kas Umum
+h. Lihat Laporan Bulanan
+Berikut adalah deskripsi Use Case lihat laporan bulanan yang dapat dilihat pada Tabel 4.8 berikut.
+Tabel 4. 8 Deskripsi Use Case Lihat Laporan Bulanan
+4.2.3  Activity Diagram
+Activity diagram digunakan untuk menggambarkan alur kerja atau aktivitas dalam sistem yang telah terbentuk dalam deskripsi Use Case. Diagram ini menunjukan langkah-langkah yang diambil dari satu aktivitas ke aktivitas lain.
+a. Login
+Berikut adalah activity diagram login yang dapat dilihat pada Gambar 4.2 berikut.
+Gambar 4.2 Activity Diagram Login
+b. Kelola Akun Pengguna
+Berikut adalah activity diagram kelola pengguna yang dapat dilihat pada Gambar 4.3 berikut.
+Gambar 4.3 Activity Diagram Kelola Akun Pengguna
+c. Kelola Data Capster
+Berikut adalah activity diagram kelola data capster yang dapat dilihat pada Gambar 4.4 berikut.
+Gambar 4.4 Activity Diagram Kelola Data Capster
+d. Kelola Data Layanan
+Berikut adalah activity diagram kelola layanan yang dapat dilihat pada Gambar 4.5 berikut.
+Gambar 4.5 Activity Diagram Kelola Data Layanan
+e. Input Pendapatan Harian
+Berikut adalah activity diagram mencatat pendapatan harian yang dapat dilihat pada Gambar 4.6 berikut.
+Gambar 4.6 Activity Diagram Input Pendapatan Harian
+f. Kelola Biaya Operasional
+Berikut adalah activity diagram kelola operasional yang dapat dilihat pada Gambar 4.7 berikut.
+Gambar 4.7 Activity Diagram Kelola Biaya Operasional
+g. Kelola Buku Kas Umum
+Berikut adalah activity diagram kelola buku kas yang dapat dilihat pada Gambar 4.8 berikut.
+Gambar 4.8 Activity Diagram Kelola Buku Kas
+h. Lihat Laporan Bulanan
+Berikut adalah activity diagram laporan bulanan yang dapat dilihat pada Gambar 4.9 berikut.
+Gambar 4.9 Activity Diagram Lihat Laporan Bulanan
+4.2.4  Class Diagram
+Class diagram menggambarkan struktur dan deskripsi class, package, dan objek beserta hubungan satu sama lain. Class diagram sistem dapat dilihat pada Gambar 4.10 berikut.
+Gambar 4.10 Class Diagram
+4.2.5  Entity Relationship Diagram
+Entity Relationship Diagram (ERD) digunakan untuk memodelkan struktur data dan hubungan antar entitas di ruang lingkup basis data persisten. ERD sistem dapat dilihat pada Gambar 4.11 berikut.
+Gambar 4.11 Entity Relationship Diagram
+Skema Database
+Sistem ini memanfaatkan basis data NoSQL melalui Firebase Firestore. Skema basis data secara keseluruhan dirancang menggunakan struktur Collection (Tabel) dan Document (Baris) sebagai berikut:
+1. Collection users.
+2. Collection capsters.
+3. Collection layanan.
+4. Collection buku_kas.
+5. Collection operasional_costs.
+6. Collection daily_incomes.
+Rancangan Tabel
+Secara spesifik, rancangan struktur dokumen NoSQL di dalam Firebase dijabarkan secara terperinci sebagai berikut:
+1. Collection 'users': Merupakan tempat penyimpanan entitas autentikasi sekunder pengguna. Terdiri dari field `idUser`, `username`, `password` (untuk login mandiri), `name`, `role`, dan tautan `idCapster` jika user tersebut bertindak sebagai capster.
+2. Collection 'capsters': Tempat bernaung data identitas primer para pekerja cukur. Terdiri dari `idCapster`, `namaCapster`, `noHp`, dan `status` keaktifan.
+3. Collection 'layanan': Tabel harga produk jasa. Menyimpan rincian seperti `idLayanan`, `kodeLayanan`, `namaLayanan`, nilai `harga`, dan grup `kategori`.
+4. Collection 'buku_kas': Buku besar yang melacak masuk dan keluarnya seluruh kas. Terdapat `idKas`, `tanggal`, `uraian` transaksi, nilai `penerimaan` / `pengeluaran`, dan `saldo` mutasi akhir.
+5. Collection 'operasional_costs': Gudang record khusus biaya operasional bulanan, seperti bayar listrik atau sewa. Mencatat rentang `bulan`, `namaBiaya`, serta `nominal` pengeluaran.
+6. Collection 'daily_incomes': Penyimpanan utama setoran harian. Memuat penanda unik `idPendapatan`, `tanggal`, mengikat `idCapster` (Foreign Key), mencatat kinerja (seperti layanan `cs`, `cu`, total tamu), serta jumlah `pendapatan` aktual uang tunai.
+Rancangan User Interface
+Rancangan User Interface dibuat untuk memberikan gambaran antarmuka dari aplikasi yang akan dibangun.
+Desain Antarmuka Login.
+Berikut adalah desain antarmuka login yang dapat dilihat pada Gambar 4.12 berikut.
+Gambar 4. 12 Desain UI Login
+Desain Antarmuka Dashboard.
+Berikut adalah desain antarmuka dashboard yang dapat dilihat pada Gambar 4.13 berikut.
+Gambar 4. 13 Desain UI Dashboard
+4.3 Implementasi
+Setelah seluruh cetak biru (blueprint) rancangan terselesaikan di fase Elaboration, langkah selanjutnya adalah tahapan Construction. Fase ini menerjemahkan seluruh model UML ke dalam wujud bahasa pemrograman komputer yang fungsional.
+4.3.1  Implementasi Database
+Implementasi repositori data dikonfigurasi melalui panel kontrol web Firebase Console. Pembuatan project baru diinisiasi dan dihubungkan secara teknis dengan aplikasi Flutter menggunakan berkas konfigurasi `google-services.json`.
+4.3.2  Implementasi Sistem
+Pada ranah implementasi antarmuka klien, seluruh tampilan visual dibangun dengan mengeksekusi penulisan kode berbasis bahasa pemrograman Dart di bawah ekosistem framework Flutter.
+4.4 Pengujian
+4.4.1 Black Box Testing
+Pengujian sistem menggunakan Black Box Testing. Hasil pengujian dapat dilihat pada Tabel 4.10 berikut.
+Tabel 4. 10 Tabel Pengujian Sistem
+Sebagai pamungkas dari siklus hidup pengembangan sistem perangkat lunak, sistem dihadapkan pada fase Transition.
+Deployment
+Prosedur pelepasan aplikasi (proses deployment) diinisiasi dengan melakukan kompilasi (build process) terhadap basis kode Dart menjadi paket mandiri berekstensi apk (Android Application Package). Berkas APK hasil build tersebut kemudian didistribusikan kepada seluruh pegawai terkait di lingkungan Garden Barbershop.
+DAFTAR PUSTAKA

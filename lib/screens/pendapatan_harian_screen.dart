@@ -10,8 +10,8 @@ import '../theme/app_theme.dart';
 import '../utils/currency_formatter.dart';
 import '../utils/date_formatter.dart';
 import '../utils/validators.dart';
-import '../widgets/app_bottom_nav.dart';
-import '../widgets/app_drawer.dart';
+import '../widgets/app_page_widgets.dart';
+import '../widgets/responsive_scaffold.dart';
 import '../widgets/app_page_widgets.dart';
 import '../widgets/loading_dialog.dart';
 
@@ -228,11 +228,9 @@ class _PendapatanHarianScreenState extends State<PendapatanHarianScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return ResponsiveScaffold(
+      currentRoute: PendapatanHarianScreen.routeName,
       appBar: AppBar(title: const Text('Pendapatan Harian')),
-      drawer: const AppDrawer(),
-      bottomNavigationBar:
-          const AppBottomNav(currentRoute: PendapatanHarianScreen.routeName),
       body: FutureBuilder<List<CapsterModel>>(
         future: _capsterFuture,
         builder: (context, snapshot) {

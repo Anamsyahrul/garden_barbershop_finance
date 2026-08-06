@@ -6,8 +6,8 @@ import '../models/user_role.dart';
 import '../services/firebase_service.dart';
 import '../theme/app_theme.dart';
 import '../utils/validators.dart';
-import '../widgets/app_drawer.dart';
 import '../widgets/app_page_widgets.dart';
+import '../widgets/responsive_scaffold.dart';
 import '../widgets/custom_text_field.dart';
 import '../widgets/loading_dialog.dart';
 
@@ -274,9 +274,9 @@ class _AkunPenggunaScreenState extends State<AkunPenggunaScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return ResponsiveScaffold(
+      currentRoute: AkunPenggunaScreen.routeName,
       appBar: AppBar(title: const Text('Akun Pengguna')),
-      drawer: const AppDrawer(),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _showForm(),
         icon: const Icon(Icons.person_add_alt_1),

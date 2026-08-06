@@ -7,8 +7,8 @@ import '../theme/app_theme.dart';
 import '../utils/currency_formatter.dart';
 import '../utils/rupiah_input_formatter.dart';
 import '../utils/validators.dart';
-import '../widgets/app_drawer.dart';
 import '../widgets/app_page_widgets.dart';
+import '../widgets/responsive_scaffold.dart';
 import '../widgets/custom_text_field.dart';
 import '../widgets/loading_dialog.dart';
 
@@ -192,9 +192,9 @@ class _LayananScreenState extends State<LayananScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return ResponsiveScaffold(
+      currentRoute: LayananScreen.routeName,
       appBar: AppBar(title: const Text('Data Layanan')),
-      drawer: const AppDrawer(),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _showForm(),
         icon: const Icon(Icons.add),

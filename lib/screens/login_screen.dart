@@ -78,7 +78,8 @@ class _LoginScreenState extends State<LoginScreen> {
                   _ambientCircle(190, AppColors.blue.withValues(alpha: 0.08)),
             ),
             SafeArea(
-              child: Center(
+              child: Align(
+                alignment: const Alignment(0, -0.3),
                 child: SingleChildScrollView(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 22, vertical: 26),
@@ -125,82 +126,42 @@ class _LoginScreenState extends State<LoginScreen> {
         borderRadius: AppTheme.radiusLarge,
         boxShadow: AppTheme.floatingShadow,
       ),
-      child: Stack(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Positioned(
-            right: -18,
-            top: -22,
-            child: Icon(
-              Icons.account_balance_wallet_rounded,
-              size: 130,
-              color: Colors.white.withValues(alpha: 0.08),
-            ),
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          Row(
             children: [
-              Row(
-                children: [
-                  Container(
-                    width: 58,
-                    height: 58,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.18),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.28)),
-                    ),
-                    child: const Center(
-                      child: Text(
-                        'G',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 28,
-                          fontWeight: FontWeight.w900,
-                          height: 1.1,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const Spacer(),
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.14),
-                      borderRadius: BorderRadius.circular(999),
-                    ),
-                    child: const Text(
-                      'Finance Control',
-                      style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w900,
-                          fontSize: 12),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 26),
-              const Text(
-                'Garden Barbershop',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 28,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: -0.6,
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(10),
                 ),
+                child: const Icon(Icons.content_cut_rounded, color: Colors.white, size: 20),
               ),
-              const SizedBox(height: 6),
-              Text(
-                'Pantau pendapatan, kas, operasional, dan pembagian hasil dalam satu aplikasi.',
-                style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.84),
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  height: 1.45,
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Text(
+                  'GARDEN BARBERSHOP',
+                  style: TextStyle(
+                    color: Colors.white, 
+                    fontSize: 17, 
+                    fontWeight: FontWeight.w900, 
+                    letterSpacing: 0.5,
+                  ),
                 ),
               ),
             ],
+          ),
+          const SizedBox(height: 14),
+          Text(
+            'Aplikasi manajemen pendapatan, operasional, dan pembagian hasil.',
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.85), 
+              fontSize: 12.5, 
+              fontWeight: FontWeight.w500, 
+              height: 1.35,
+            ),
           ),
         ],
       ),

@@ -1,0 +1,87 @@
+﻿erDiagram
+    USERS ||--o{ BUKU_KAS_UMUM : "mencatat"
+    USERS ||--o{ OPERASIONAL : "melakukan"
+    USERS ||--o{ PENDAPATAN_HARIAN : "merekap"
+    USERS ||--o{ LAYANAN : "mengelola"
+    USERS ||--o{ LAPORAN_BULANAN : "mencetak"
+    USERS ||--|| CAPSTER : "terhubung_ke"
+    CAPSTER ||--o{ PENDAPATAN_HARIAN : "mendapatkan"
+    CAPSTER ||--|| REKAP_CUSTOMER : "dievaluasi_dalam"
+    
+    USERS {
+        String id_user PK
+        String username
+        String password
+        String name
+        String role
+        String status
+        String id_capster FK
+    }
+    
+    CAPSTER {
+        String id_capster PK
+        String nama_capster
+        String no_hp
+        String status
+    }
+    
+    LAYANAN {
+        String id_layanan PK
+        String kode_layanan
+        String nama_layanan
+        Integer harga
+        String kategori
+        String status
+    }
+    
+    BUKU_KAS_UMUM {
+        String id_kas PK
+        String id_user FK
+        String tanggal
+        String uraian
+        String akun
+        Integer penerimaan
+        Integer pengeluaran
+        Integer saldo
+        String keterangan
+    }
+    
+    OPERASIONAL {
+        String id_operasional PK
+        String id_user FK
+        String bulan
+        String nama_biaya
+        String akun
+        Integer nominal
+        String keterangan
+    }
+    
+    PENDAPATAN_HARIAN {
+        String id_pendapatan PK
+        String id_user FK
+        String id_capster FK
+        String tanggal
+        String nama_capster
+        Integer pendapatan
+        Integer cs
+        Integer cu
+        Integer total_customer
+    }
+    
+    LAPORAN_BULANAN {
+        String id_laporan PK
+        String bulan
+        String tahun
+        Integer total_pendapatan
+        Integer total_pengeluaran
+        Integer laba_bersih
+    }
+    
+    REKAP_CUSTOMER {
+        String id_rekap PK
+        String id_capster FK
+        String periode
+        Integer total_cs
+        Integer total_cu
+        Integer total_keseluruhan
+    }

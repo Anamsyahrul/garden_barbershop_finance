@@ -1,0 +1,95 @@
+﻿flowchart TD
+
+    %% Entities
+    E_U[USERS]
+    E_C[CAPSTER]
+    E_L[LAYANAN]
+    E_B[BUKU_KAS_UMUM]
+    E_O[OPERASIONAL]
+    E_P[PENDAPATAN_HARIAN]
+    E_LB[LAPORAN_BULANAN]
+    E_RC[REKAP_CUSTOMER]
+
+    %% Relationships
+    R_U_B{mencatat}
+    R_U_O{mencatat}
+    R_U_P{mencatat}
+    R_C_P{menghasilkan}
+    R_C_RC{dievaluasi_dalam}
+    R_U_C{terhubung}
+    R_U_L{mengelola}
+    R_U_LB{mencetak}
+
+    %% Connect Entities to Relationships (with Cardinality)
+    E_U ---|1| R_U_B ---|N| E_B
+    E_U ---|1| R_U_O ---|N| E_O
+    E_U ---|1| R_U_P ---|N| E_P
+    E_C ---|1| R_C_P ---|N| E_P
+    E_C ---|1| R_C_RC ---|1| E_RC
+    E_U ---|1| R_U_C ---|1| E_C
+    E_U ---|1| R_U_L ---|N| E_L
+    E_U ---|1| R_U_LB ---|N| E_LB
+
+    %% Attributes for users
+    E_U --- U1([<u>id_user</u>])
+    E_U --- U2([username])
+    E_U --- U3([password])
+    E_U --- U4([name])
+    E_U --- U5([role])
+    E_U --- U6([status])
+
+    %% Attributes for capster
+    E_C --- C1([<u>id_capster</u>])
+    E_C --- C2([nama_capster])
+    E_C --- C3([no_hp])
+    E_C --- C4([status])
+
+    %% Attributes for layanan
+    E_L --- L1([<u>id_layanan</u>])
+    E_L --- L2([kode_layanan])
+    E_L --- L3([nama_layanan])
+    E_L --- L4([harga])
+    E_L --- L5([kategori])
+    E_L --- L6([status])
+
+    %% Attributes for buku_kas_umum
+    E_B --- B1([<u>id_kas</u>])
+    E_B --- B2([tanggal])
+    E_B --- B3([uraian])
+    E_B --- B4([akun])
+    E_B --- B5([penerimaan])
+    E_B --- B6([pengeluaran])
+    E_B --- B7([saldo])
+    E_B --- B8([keterangan])
+
+    %% Attributes for operasional
+    E_O --- O1([<u>id_operasional</u>])
+    E_O --- O2([bulan])
+    E_O --- O3([nama_biaya])
+    E_O --- O4([akun])
+    E_O --- O5([nominal])
+    E_O --- O6([keterangan])
+
+    %% Attributes for pendapatan_harian
+    E_P --- P1([<u>id_pendapatan</u>])
+    E_P --- P2([tanggal])
+    E_P --- P3([nama_capster])
+    E_P --- P4([pendapatan])
+    E_P --- P5([cs])
+    E_P --- P6([cu])
+    E_P --- P7([total_customer])
+
+    %% Attributes for laporan_bulanan
+    E_LB --- LB1([<u>id_laporan</u>])
+    E_LB --- LB2([bulan])
+    E_LB --- LB3([tahun])
+    E_LB --- LB4([total_pendapatan])
+    E_LB --- LB5([total_pengeluaran])
+    E_LB --- LB6([laba_bersih])
+
+    %% Attributes for rekap_customer
+    E_RC --- RC1([<u>id_rekap</u>])
+    E_RC --- RC2([periode])
+    E_RC --- RC3([total_cs])
+    E_RC --- RC4([total_cu])
+    E_RC --- RC5([total_keseluruhan])

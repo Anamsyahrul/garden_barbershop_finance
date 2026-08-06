@@ -8,9 +8,8 @@ import '../utils/currency_formatter.dart';
 import '../utils/date_formatter.dart';
 import '../utils/rupiah_input_formatter.dart';
 import '../utils/validators.dart';
-import '../widgets/app_bottom_nav.dart';
-import '../widgets/app_drawer.dart';
 import '../widgets/app_page_widgets.dart';
+import '../widgets/responsive_scaffold.dart';
 import '../widgets/custom_text_field.dart';
 import '../widgets/loading_dialog.dart';
 
@@ -170,11 +169,9 @@ class _BukuKasScreenState extends State<BukuKasScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return ResponsiveScaffold(
+      currentRoute: BukuKasScreen.routeName,
       appBar: AppBar(title: const Text('Buku Kas Umum')),
-      drawer: const AppDrawer(),
-      bottomNavigationBar:
-          const AppBottomNav(currentRoute: BukuKasScreen.routeName),
       body: Form(
         key: _formKey,
         child: ListView(

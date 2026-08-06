@@ -210,8 +210,17 @@ class _BrandMark extends StatelessWidget {
         border:
             Border.all(color: Colors.white.withValues(alpha: 0.26), width: 1.3),
       ),
-      child:
-          const Icon(Icons.content_cut_rounded, color: Colors.white, size: 29),
+      child: const Center(
+        child: Text(
+          'G',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 26,
+            fontWeight: FontWeight.w900,
+            height: 1.1,
+          ),
+        ),
+      ),
     );
   }
 }

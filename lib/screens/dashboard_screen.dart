@@ -6,9 +6,8 @@ import '../services/firebase_service.dart';
 import '../theme/app_theme.dart';
 import '../utils/currency_formatter.dart';
 import '../utils/date_formatter.dart';
-import '../widgets/app_bottom_nav.dart';
-import '../widgets/app_drawer.dart';
 import '../widgets/app_page_widgets.dart';
+import '../widgets/responsive_scaffold.dart';
 import 'akun_pengguna_screen.dart';
 import 'buku_kas_screen.dart';
 import 'capster_screen.dart';
@@ -83,7 +82,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return ResponsiveScaffold(
+      currentRoute: DashboardScreen.routeName,
       extendBody: true,
       appBar: AppBar(
         title: const Text('Dashboard'),
@@ -98,9 +98,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
         ],
       ),
-      drawer: const AppDrawer(),
-      bottomNavigationBar:
-          const AppBottomNav(currentRoute: DashboardScreen.routeName),
       body: _dashboardBackground(
         child: RefreshIndicator(
           onRefresh: () async {
@@ -118,14 +115,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
               final personalView =
                   role == UserRole.capster || role == UserRole.adminHarian;
               return ListView(
-                padding: const EdgeInsets.fromLTRB(16, 10, 16, 96),
+                padding: EdgeInsets.fromLTRB(16, 10, 16, 120 + MediaQuery.paddingOf(context).bottom),
                 children: [
                   _primaryBalance(data),
                   const SizedBox(height: 16),
                   LayoutBuilder(
                     builder: (context, constraints) {
                       final itemWidth = constraints.maxWidth >= 720
-                          ? (constraints.maxWidth - 24) / 3
+                          ? (constraints.maxWidth - 36) / 4
                           : (constraints.maxWidth - 12) / 2;
                       return Wrap(
                         spacing: 12,
@@ -160,15 +157,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             width: itemWidth,
                             child: CompactMetricCard(
                               title: personalView
-                                  ? 'Bagian Saya'
+                                  ? 'Bagian Outlet'
                                   : 'Bagian Pondok',
-                              value: CurrencyFormatter.format(
-                                personalView
-                                    ? data.totalBagianCapster
-                                    : data.totalBagianPondok,
-                              ),
-                              icon: Icons.savings_rounded,
+                              value: CurrencyFormatter.format(data.totalBagianPondok),
+                              icon: Icons.account_balance_rounded,
                               tint: AppColors.teal,
+                            ),
+                          ),
+                          SizedBox(
+                            width: itemWidth,
+                            child: CompactMetricCard(
+                              title: personalView
+                                  ? 'Bagian Saya'
+                                  : 'Bagian Capster',
+                              value: CurrencyFormatter.format(data.totalBagianCapster),
+                              icon: Icons.savings_rounded,
+                              tint: const Color(0xFFF59E0B), // Amber/Brass
                             ),
                           ),
                         ],
@@ -205,8 +209,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       );
                     },
                   ),
-                  const SizedBox(height: 18),
-                  _insightCard(data, personalView),
                 ],
               );
             },
@@ -256,21 +258,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Widget _primaryBalance(_DashboardData data) {
     return Container(
-      padding: const EdgeInsets.all(22),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         gradient: AppColors.primaryGradient,
         borderRadius: AppTheme.radiusLarge,
         boxShadow: AppTheme.floatingShadow,
       ),
       child: Stack(
+        clipBehavior: Clip.none,
         children: [
           Positioned(
-            right: -22,
-            top: -24,
+            right: -20,
+            bottom: -20,
             child: Icon(
-              Icons.auto_graph_rounded,
-              color: Colors.white.withValues(alpha: 0.09),
-              size: 150,
+              Icons.cut_rounded,
+              color: Colors.white.withValues(alpha: 0.1),
+              size: 140,
             ),
           ),
           Column(
@@ -279,115 +282,71 @@ class _DashboardScreenState extends State<DashboardScreen> {
               Row(
                 children: [
                   Container(
-                    width: 50,
-                    height: 50,
+                    width: 48,
+                    height: 48,
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.16),
-                      borderRadius: BorderRadius.circular(18),
-                      border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.22)),
+                      color: Colors.white.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
                     ),
-                    child: const Icon(Icons.content_cut_rounded,
-                        color: Colors.white, size: 26),
+                    child: const Center(
+                      child: Icon(Icons.storefront_rounded, color: Colors.white, size: 24),
+                    ),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: 14),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const Text(
-                          'Garden Finance',
+                          'GARDEN FINANCE',
                           style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w900,
-                              fontSize: 16),
+                            color: Colors.white, 
+                            fontWeight: FontWeight.w900, 
+                            fontSize: 14,
+                            letterSpacing: 1.5,
+                          ),
                         ),
                         const SizedBox(height: 2),
                         Text(
                           data.user == null
-                              ? 'Dashboard bisnis'
-                              : '${data.user!.name} • ${data.user!.role.label}',
+                              ? 'Admin Dashboard'
+                              : '${data.user!.name}',
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                              color: Colors.white.withValues(alpha: 0.76),
-                              fontWeight: FontWeight.w700,
-                              fontSize: 12),
+                          style: TextStyle(color: Colors.white.withValues(alpha: 0.9), fontWeight: FontWeight.w600, fontSize: 13),
                         ),
                       ],
                     ),
                   ),
                   Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.15),
+                      color: Colors.white,
                       borderRadius: BorderRadius.circular(999),
                     ),
-                    child: const Text(
-                      'Live',
-                      style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w900,
-                          fontSize: 12),
+                    child: Text(
+                      data.user?.role.label.toUpperCase() ?? 'LIVE', 
+                      style: const TextStyle(color: AppColors.tealDark, fontWeight: FontWeight.w900, fontSize: 10, letterSpacing: 1.0)
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 26),
+              const SizedBox(height: 28),
               Text(
-                'Total Pendapatan Bulan Ini',
-                style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.72),
-                    fontWeight: FontWeight.w700,
-                    fontSize: 12),
+                'PENDAPATAN BULAN INI',
+                style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontWeight: FontWeight.w800, fontSize: 11, letterSpacing: 1.5),
               ),
-              const SizedBox(height: 5),
+              const SizedBox(height: 4),
               Text(
                 CurrencyFormatter.format(data.totalPendapatan),
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 31,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: -1.1,
-                ),
-              ),
-              const SizedBox(height: 16),
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.13),
-                  borderRadius: BorderRadius.circular(18),
-                  border:
-                      Border.all(color: Colors.white.withValues(alpha: 0.16)),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.person_rounded,
-                        color: Colors.white, size: 20),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        'Bagian capster',
-                        style: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.78),
-                            fontWeight: FontWeight.w700,
-                            fontSize: 12),
-                      ),
-                    ),
-                    Text(
-                      CurrencyFormatter.format(data.totalBagianCapster),
-                      style: const TextStyle(
-                          color: Colors.white, fontWeight: FontWeight.w900),
-                    ),
-                  ],
-                ),
+                style: const TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.w900, letterSpacing: -0.5),
               ),
             ],
           ),
         ],
       ),
-    );
+        );
   }
 
   List<Widget> _mainActions(BuildContext context, UserRole role) {
@@ -543,43 +502,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
       _secondaryAction(context, 'Laporan Saya', Icons.table_chart_rounded,
           LaporanScreen.routeName, width)
     ];
-  }
-
-  Widget _insightCard(_DashboardData data, bool personalView) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        gradient: AppColors.softGradient,
-        borderRadius: AppTheme.radiusLarge,
-        border: Border.all(color: AppColors.line),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 46,
-            height: 46,
-            decoration: BoxDecoration(
-              gradient: AppColors.goldGradient,
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: const Icon(Icons.tips_and_updates_rounded,
-                color: AppColors.navy),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              personalView
-                  ? 'Pantau pendapatan dan bagian kamu secara rutin agar laporan bulanan tetap akurat.'
-                  : 'Dashboard ini membantu memantau cashflow, capster aktif, dan pembagian hasil secara cepat.',
-              style: const TextStyle(
-                  color: AppColors.charcoalSoft,
-                  fontWeight: FontWeight.w700,
-                  height: 1.35),
-            ),
-          ),
-        ],
-      ),
-    );
   }
 }
 

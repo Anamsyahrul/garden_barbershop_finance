@@ -1,0 +1,148 @@
+﻿graph ERD {
+    layout=neato
+
+    fontname="Helvetica"
+    node [fontname="Helvetica"]
+    edge [fontname="Helvetica"]
+    
+    // Graph attributes for wide, clean layout
+    overlap=false
+    splines=true
+    nodesep=0.5
+    ranksep=0.8
+    sep="+0.5"
+
+    // --- ENTITIES (Boxes) ---
+    node [fontsize=12, shape=box, style=filled, fillcolor=lightblue, penwidth=2]
+    USERS; CAPSTER; LAYANAN; BUKU_KAS_UMUM; OPERASIONAL; PENDAPATAN_HARIAN; LAPORAN_BULANAN; REKAP_CUSTOMER;
+
+    // --- RELATIONSHIPS (Diamonds) ---
+    node [fontsize=11, shape=diamond, style=filled, fillcolor=lightyellow, penwidth=1.5]
+    r_catat_buku [label="mencatat"]
+    r_catat_ops [label="melakukan"]
+    r_catat_pend [label="merekap"]
+    r_kelola_layanan [label="mengelola"]
+    r_cetak_laporan [label="mencetak"]
+    r_terhubung [label="terhubung_ke"]
+    r_dapat_pend [label="mendapatkan"]
+    r_evaluasi [label="dievaluasi\ndalam"]
+
+    // --- ATTRIBUTES (Ovals) ---
+    node [shape=ellipse, style=solid, fillcolor=white, penwidth=1, fontsize=10, margin="0.02,0.02"]
+    
+    // USERS Attributes
+    u_id [label=<<U>id_user</U>>]
+    u_username [label="username"]
+    u_password [label="password"]
+    u_name [label="name"]
+    u_role [label="role"]
+    u_status [label="status"]
+    u_idcap [label="id_capster"]
+
+    USERS -- u_id; USERS -- u_username; USERS -- u_password; USERS -- u_name; USERS -- u_role; USERS -- u_status; USERS -- u_idcap;
+
+    // CAPSTER Attributes
+    c_id [label=<<U>id_capster</U>>]
+    c_nama [label="nama_capster"]
+    c_nohp [label="no_hp"]
+    c_status [label="status"]
+
+    CAPSTER -- c_id; CAPSTER -- c_nama; CAPSTER -- c_nohp; CAPSTER -- c_status;
+
+    // LAYANAN Attributes
+    l_id [label=<<U>id_layanan</U>>]
+    l_kode [label="kode_layanan"]
+    l_nama [label="nama_layanan"]
+    l_harga [label="harga"]
+    l_kat [label="kategori"]
+    l_status [label="status"]
+
+    LAYANAN -- l_id; LAYANAN -- l_kode; LAYANAN -- l_nama; LAYANAN -- l_harga; LAYANAN -- l_kat; LAYANAN -- l_status;
+
+    // BUKU_KAS_UMUM Attributes
+    b_id [label=<<U>id_kas</U>>]
+    b_uid [label="id_user"]
+    b_tgl [label="tanggal"]
+    b_urai [label="uraian"]
+    b_akun [label="akun"]
+    b_in [label="penerimaan"]
+    b_out [label="pengeluaran"]
+    b_saldo [label="saldo"]
+    b_ket [label="keterangan"]
+
+    BUKU_KAS_UMUM -- b_id; BUKU_KAS_UMUM -- b_uid; BUKU_KAS_UMUM -- b_tgl; BUKU_KAS_UMUM -- b_urai; BUKU_KAS_UMUM -- b_akun; BUKU_KAS_UMUM -- b_in; BUKU_KAS_UMUM -- b_out; BUKU_KAS_UMUM -- b_saldo; BUKU_KAS_UMUM -- b_ket;
+
+    // OPERASIONAL Attributes
+    o_id [label=<<U>id_operasional</U>>]
+    o_uid [label="id_user"]
+    o_bln [label="bulan"]
+    o_nama [label="nama_biaya"]
+    o_akun [label="akun"]
+    o_nom [label="nominal"]
+    o_ket [label="keterangan"]
+
+    OPERASIONAL -- o_id; OPERASIONAL -- o_uid; OPERASIONAL -- o_bln; OPERASIONAL -- o_nama; OPERASIONAL -- o_akun; OPERASIONAL -- o_nom; OPERASIONAL -- o_ket;
+
+    // PENDAPATAN_HARIAN Attributes
+    p_id [label=<<U>id_pendapatan</U>>]
+    p_uid [label="id_user"]
+    p_cid [label="id_capster"]
+    p_tgl [label="tanggal"]
+    p_nama [label="nama_capster"]
+    p_pend [label="pendapatan"]
+    p_cs [label="cs"]
+    p_cu [label="cu"]
+    p_tot [label="total_customer"]
+
+    PENDAPATAN_HARIAN -- p_id; PENDAPATAN_HARIAN -- p_uid; PENDAPATAN_HARIAN -- p_cid; PENDAPATAN_HARIAN -- p_tgl; PENDAPATAN_HARIAN -- p_nama; PENDAPATAN_HARIAN -- p_pend; PENDAPATAN_HARIAN -- p_cs; PENDAPATAN_HARIAN -- p_cu; PENDAPATAN_HARIAN -- p_tot;
+
+    // LAPORAN_BULANAN Attributes
+    lb_id [label=<<U>id_laporan</U>>]
+    lb_bln [label="bulan"]
+    lb_thn [label="tahun"]
+    lb_tin [label="total_pendapatan"]
+    lb_tout [label="total_pengeluaran"]
+    lb_laba [label="laba_bersih"]
+
+    LAPORAN_BULANAN -- lb_id; LAPORAN_BULANAN -- lb_bln; LAPORAN_BULANAN -- lb_thn; LAPORAN_BULANAN -- lb_tin; LAPORAN_BULANAN -- lb_tout; LAPORAN_BULANAN -- lb_laba;
+
+    // REKAP_CUSTOMER Attributes
+    rc_id [label=<<U>id_rekap</U>>]
+    rc_cid [label="id_capster"]
+    rc_per [label="periode"]
+    rc_cs [label="total_cs"]
+    rc_cu [label="total_cu"]
+    rc_tot [label="total_keseluruhan"]
+
+    REKAP_CUSTOMER -- rc_id; REKAP_CUSTOMER -- rc_cid; REKAP_CUSTOMER -- rc_per; REKAP_CUSTOMER -- rc_cs; REKAP_CUSTOMER -- rc_cu; REKAP_CUSTOMER -- rc_tot;
+
+    // --- CONNECT ENTITIES TO RELATIONSHIPS ---
+    // USERS Relationships
+    USERS -- r_catat_buku [label="1", len=1.5]
+    r_catat_buku -- BUKU_KAS_UMUM [label="N", len=1.5]
+
+    USERS -- r_catat_ops [label="1", len=1.5]
+    r_catat_ops -- OPERASIONAL [label="N", len=1.5]
+
+    USERS -- r_catat_pend [label="1", len=1.5]
+    r_catat_pend -- PENDAPATAN_HARIAN [label="N", len=1.5]
+
+    USERS -- r_kelola_layanan [label="1", len=1.5]
+    r_kelola_layanan -- LAYANAN [label="N", len=1.5]
+
+    USERS -- r_cetak_laporan [label="1", len=1.5]
+    r_cetak_laporan -- LAPORAN_BULANAN [label="N", len=1.5]
+
+    USERS -- r_terhubung [label="1", len=1.5]
+    r_terhubung -- CAPSTER [label="1", len=1.5]
+
+    // CAPSTER Relationships
+    CAPSTER -- r_dapat_pend [label="1", len=1.5]
+    r_dapat_pend -- PENDAPATAN_HARIAN [label="N", len=1.5]
+
+    CAPSTER -- r_evaluasi [label="1", len=1.5]
+    r_evaluasi -- REKAP_CUSTOMER [label="1", len=1.5]
+}
+
+
+

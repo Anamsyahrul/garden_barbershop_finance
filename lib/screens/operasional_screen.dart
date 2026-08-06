@@ -9,9 +9,8 @@ import '../utils/currency_formatter.dart';
 import '../utils/date_formatter.dart';
 import '../utils/rupiah_input_formatter.dart';
 import '../utils/validators.dart';
-import '../widgets/app_bottom_nav.dart';
-import '../widgets/app_drawer.dart';
 import '../widgets/app_page_widgets.dart';
+import '../widgets/responsive_scaffold.dart';
 import '../widgets/custom_text_field.dart';
 import '../widgets/loading_dialog.dart';
 
@@ -159,11 +158,9 @@ class _OperasionalScreenState extends State<OperasionalScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return ResponsiveScaffold(
+      currentRoute: OperasionalScreen.routeName,
       appBar: AppBar(title: const Text('Operasional')),
-      drawer: const AppDrawer(),
-      bottomNavigationBar:
-          const AppBottomNav(currentRoute: OperasionalScreen.routeName),
       body: Form(
         key: _formKey,
         child: ListView(

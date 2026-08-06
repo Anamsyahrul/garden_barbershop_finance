@@ -8,8 +8,8 @@ import '../services/firebase_service.dart';
 import '../theme/app_theme.dart';
 import '../utils/currency_formatter.dart';
 import '../utils/date_formatter.dart';
-import '../widgets/app_bottom_nav.dart';
-import '../widgets/app_drawer.dart';
+import '../widgets/app_page_widgets.dart';
+import '../widgets/responsive_scaffold.dart';
 import '../widgets/app_page_widgets.dart';
 import '../widgets/loading_dialog.dart';
 
@@ -164,11 +164,9 @@ class _LaporanScreenState extends State<LaporanScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return ResponsiveScaffold(
+      currentRoute: LaporanScreen.routeName,
       appBar: AppBar(title: const Text('Laporan Pembagian Hasil')),
-      drawer: const AppDrawer(),
-      bottomNavigationBar:
-          const AppBottomNav(currentRoute: LaporanScreen.routeName),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(14, 14, 14, 18),
         children: [
