@@ -183,6 +183,11 @@ class _PendapatanHarianScreenState extends State<PendapatanHarianScreen> {
         totalCustomer: cs + cu,
       );
       await FirebaseService.instance.savePendapatanHarian(model);
+      await FirebaseService.instance.addNotification(
+        title: 'Setoran Masuk!',
+        message: '${_selectedCapster!.namaCapster} telah memasukkan setoran harian sebesar ${CurrencyFormatter.format(totalPendapatan)}.',
+        type: 'income',
+      );
       if (!mounted) return;
       LoadingDialog.hide(context);
       ScaffoldMessenger.of(context).showSnackBar(

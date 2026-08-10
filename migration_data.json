@@ -1,0 +1,98 @@
+{
+  "pendapatan": [
+    {
+      "idPendapatan": "P191e01df",
+      "tanggal": "1970-01-01T00:00:00.000",
+      "idCapster": "C001",
+      "namaCapster": "MUHAMAD DIVA SYARRI",
+      "SN": 0,
+      "RC": 3,
+      "PC": 8,
+      "GC": 0,
+      "CJ": 0,
+      "KR": 0,
+      "CH": 0,
+      "HS": 0,
+      "PR": 0,
+      "KM": 0,
+      "pendapatan": 1,
+      "cs": 159000,
+      "cu": 3,
+      "totalCustomer": 159003
+    },
+    {
+      "idPendapatan": "P12d8dd91",
+      "tanggal": "1970-01-01T00:00:00.000",
+      "idCapster": "C002",
+      "namaCapster": "UMAR FAUZI",
+      "SN": 0,
+      "RC": 1,
+      "PC": 9,
+      "GC": 0,
+      "CJ": 0,
+      "KR": 0,
+      "CH": 1,
+      "HS": 0,
+      "PR": 0,
+      "KM": 0,
+      "pendapatan": 1,
+      "cs": 153000,
+      "cu": 1,
+      "totalCustomer": 153001
+    },
+    {
+      "idPendapatan": "P6e96958c",
+      "tanggal": "1970-01-01T00:00:00.000",
+      "idCapster": "C003",
+      "namaCapster": "M. KHADIK",
+      "SN": 0,
+      "RC": 2,
+      "PC": 9,
+      "GC": 0,
+      "CJ": 0,
+      "KR": 0,
+      "CH": 0,
+      "HS": 0,
+      "PR": 0,
+      "KM": 0,
+      "pendapatan": 1,
+      "cs": 161000,
+      "cu": 2,
+      "totalCustomer": 161002
+    }
+  ],
+  "operasional": [
+    {
+      "idOperasional": "O1694838d",
+      "bulan": "2026-08",
+      "namaBiaya": "Kebersihan",
+      "akun": "Kebersihan",
+      "nominal": 15000,
+      "keterangan": "Hasil Migrasi Excel"
+    },
+    {
+      "idOperasional": "O51f30845",
+      "bulan": "2026-08",
+      "namaBiaya": "Laundry",
+      "akun": "Harga Pokok Penjualan",
+      "nominal": 10000,
+      "keterangan": "Hasil Migrasi Excel"
+    },
+    {
+      "idOperasional": "O42cc14f3",
+      "bulan": "2026-08",
+      "namaBiaya": "Listrik",
+      "akun": "Listrik",
+      "nominal": 1057000,
+      "keterangan": "Hasil Migrasi Excel"
+    },
+    {
+      "idOperasional": "O72d77b9e",
+      "bulan": "2026-08",
+      "namaBiaya": "Wifi",
+      "akun": "Wifi",
+      "nominal": 291500,
+      "keterangan": "Hasil Migrasi Excel"
+    }
+  ]
+}

@@ -6,6 +6,7 @@ import '../screens/capster_screen.dart';
 import '../screens/dashboard_screen.dart';
 import '../screens/laporan_screen.dart';
 import '../screens/layanan_screen.dart';
+import '../screens/neraca_screen.dart';
 import '../screens/login_screen.dart';
 import '../screens/operasional_screen.dart';
 import '../screens/pendapatan_harian_screen.dart';
@@ -44,6 +45,8 @@ class AppDrawer extends StatelessWidget {
                       'Buku Kas Umum', BukuKasScreen.routeName),
                   _item(context, Icons.receipt_long_rounded, 'Operasional',
                       OperasionalScreen.routeName),
+                  _item(context, Icons.account_balance_rounded, 'Catatan Harta',
+                      NeracaScreen.routeName),
                 ],
                 if (role == UserRole.adminHarian) ...[
                   _item(context, Icons.payments_rounded, 'Pendapatan Harian',
@@ -54,6 +57,8 @@ class AppDrawer extends StatelessWidget {
                       'Buku Kas Umum', BukuKasScreen.routeName),
                   _item(context, Icons.receipt_long_rounded, 'Operasional',
                       OperasionalScreen.routeName),
+                  _item(context, Icons.account_balance_rounded, 'Catatan Harta',
+                      NeracaScreen.routeName),
                 ],
                 _item(context, Icons.bar_chart_rounded,
                     'Laporan Pembagian Hasil', LaporanScreen.routeName),

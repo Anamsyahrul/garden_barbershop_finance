@@ -12,6 +12,9 @@ import '../widgets/app_page_widgets.dart';
 import '../widgets/responsive_scaffold.dart';
 import '../widgets/app_page_widgets.dart';
 import '../widgets/loading_dialog.dart';
+import '../models/operasional_model.dart';
+import '../models/pendapatan_harian_model.dart';
+import '../services/pdf_generator_service.dart';
 
 class LaporanScreen extends StatefulWidget {
   const LaporanScreen({super.key});
@@ -162,11 +165,68 @@ class _LaporanScreenState extends State<LaporanScreen> {
     return DateFormatter.formatDateKey(DateTime(year, month + 1, 0));
   }
 
+  Future<void> _exportPdf() async {
+    final user = await AuthService().currentUser();
+    if (user?.role == UserRole.capster || user?.role == UserRole.adminHarian) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Fitur Ekspor PDF hanya untuk Admin & Pemilik')),
+      );
+      return;
+    }
+
+    setState(() => _loading = true);
+    try {
+      final firebase = FirebaseService.instance;
+      final bulanKey = DateFormatter.toStorageMonth(_bulan.text);
+      final capster = await firebase.getCapsterAktif();
+      final pendapatan = await firebase.getPendapatanByMonth(bulanKey);
+      final operasional = await firebase.getOperasionalByMonth(bulanKey);
+      final bukuKas = await firebase.getBukuKas(); // Tampilkan seluruh riwayat
+      final semuaLaporan = await firebase.getSemuaLaporanBulanan();
+      final semuaPendapatan = await firebase.getPendapatanHarian();
+      
+      final laporan = CalculationService().generateLaporanBulanan(
+        bulan: bulanKey,
+        capsterAktif: capster,
+        pendapatan: pendapatan,
+        operasional: operasional,
+      );
+
+      await PdfGeneratorService.generateAndPrintLaporan(
+        bulan: _bulan.text,
+        capster: capster,
+        operasional: operasional,
+        pendapatan: pendapatan,
+        bukuKas: bukuKas,
+        semuaLaporan: semuaLaporan,
+        semuaPendapatan: semuaPendapatan,
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Gagal membuat PDF: $e')),
+      );
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return ResponsiveScaffold(
       currentRoute: LaporanScreen.routeName,
-      appBar: AppBar(title: const Text('Laporan Pembagian Hasil')),
+      appBar: AppBar(
+        title: const Text('Laporan Bulanan'),
+        actions: [
+          IconButton(
+            tooltip: 'Cetak / Ekspor PDF',
+            onPressed: _loading ? null : _exportPdf,
+            icon: const Icon(Icons.picture_as_pdf_rounded),
+            color: AppColors.brass,
+          ),
+          const SizedBox(width: 8),
+        ],
+      ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(14, 14, 14, 18),
         children: [

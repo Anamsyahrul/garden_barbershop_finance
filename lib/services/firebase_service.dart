@@ -9,6 +9,9 @@ import '../models/operasional_model.dart';
 import '../models/pendapatan_harian_model.dart';
 import '../models/user_model.dart';
 import '../models/user_role.dart';
+import '../models/user_role.dart';
+import '../models/app_notification_model.dart';
+import '../models/neraca_model.dart';
 import '../utils/date_formatter.dart';
 
 class FirebaseService {
@@ -90,6 +93,24 @@ class FirebaseService {
       'customer_santri',
       'customer_umum',
       'total_customer'
+    ],
+    'neraca': [
+      'id_neraca',
+      'bulan',
+      'piutang_usaha',
+      'mesin_peralatan',
+      'peralatan_lainnya',
+      'sdm_barber',
+      'harta_lain_lain',
+      'akum_penyusutan',
+      'hutang_usaha',
+      'hutang_lancar_lainnya',
+      'hutang_bank',
+      'pinjaman_pihak_ketiga',
+      'pinjaman_jangka_panjang',
+      'modal_awal',
+      'laba_tahun_lalu',
+      'prive'
     ],
     'users': [
       'id_user',
@@ -708,5 +729,184 @@ class FirebaseService {
         'C002'
       ],
     ];
+  }
+
+  // --- NOTIFICATIONS ---
+  Future<List<AppNotification>> getNotifications() async {
+    await init();
+    if (_dummyMode || _firestore == null) {
+      return [];
+    }
+
+    try {
+      final snapshot = await _firestore!
+          .collection('notifications')
+          .orderBy('date', descending: true)
+          .limit(50)
+          .get();
+      return snapshot.docs.map((doc) => AppNotification.fromMap(doc.data(), doc.id)).toList();
+    } catch (e) {
+      print("Warning: Gagal mengambil notifikasi: $e");
+      return [];
+    }
+  }
+
+  Stream<List<AppNotification>> streamNotifications() async* {
+    await init();
+    if (_dummyMode || _firestore == null) {
+      yield [];
+      return;
+    }
+
+    yield* _firestore!
+        .collection('notifications')
+        .orderBy('date', descending: true)
+        .limit(50)
+        .snapshots()
+        .map((snapshot) => snapshot.docs
+            .map((doc) => AppNotification.fromMap(doc.data(), doc.id))
+            .toList());
+  }
+
+  Future<int> getUnreadNotificationCount() async {
+    await init();
+    if (_dummyMode || _firestore == null) return 0;
+    
+    try {
+      final snapshot = await _firestore!
+          .collection('notifications')
+          .where('isRead', isEqualTo: false)
+          .get();
+      return snapshot.docs.length;
+    } catch (e) {
+      print("Warning: Gagal menghitung notifikasi belum dibaca: $e");
+      return 0;
+    }
+  }
+
+  Future<void> addNotification({
+    required String title,
+    required String message,
+    required String type,
+  }) async {
+    await init();
+    if (_dummyMode || _firestore == null) return;
+    
+    final notification = AppNotification(
+      id: 'NOTIF-${DateTime.now().millisecondsSinceEpoch}',
+      title: title,
+      message: message,
+      date: DateTime.now(),
+      type: type,
+    );
+    
+    await _firestore!.collection('notifications').doc(notification.id).set(notification.toMap());
+  }
+
+  Future<void> markNotificationAsRead(String id) async {
+    await init();
+    if (_dummyMode || _firestore == null) return;
+    await _firestore!.collection('notifications').doc(id).update({'isRead': true});
+  }
+
+  Future<void> markAllNotificationsAsRead() async {
+    await init();
+    if (_dummyMode || _firestore == null) return;
+    
+    final batch = _firestore!.batch();
+    final snapshot = await _firestore!
+        .collection('notifications')
+        .where('isRead', isEqualTo: false)
+        .get();
+        
+    for (var doc in snapshot.docs) {
+      batch.update(doc.reference, {'isRead': true});
+    }
+    
+    await batch.commit();
+  }
+
+  // --- NERACA / MANAJEMEN ASET ---
+  Future<NeracaModel> getNeraca(String bulan) async {
+    await init();
+    
+    // Convert to YYYY-MM
+    final monthKey = DateFormatter.toStorageMonth(bulan);
+    final id = 'NRC-$monthKey';
+
+    if (_dummyMode) {
+      final rows = _dummyCollections['neraca'] ?? [];
+      final header = _headers['neraca']!;
+      for (var i = 1; i < rows.length; i++) {
+        final row = rows[i];
+        if (row[0] == id) {
+          final map = <String, dynamic>{};
+          for (var j = 0; j < header.length; j++) {
+            map[header[j]] = row[j];
+          }
+          return NeracaModel.fromMap(map);
+        }
+      }
+      return NeracaModel.defaultBalances(monthKey);
+    }
+
+    final doc = await _firestore!.collection('neraca').doc(id).get();
+    if (doc.exists && doc.data() != null) {
+      return NeracaModel.fromMap(doc.data()!);
+    }
+
+    try {
+      final query = await _firestore!.collection('neraca')
+          .where('bulan', isLessThan: monthKey)
+          .orderBy('bulan', descending: true)
+          .limit(1)
+          .get();
+          
+      if (query.docs.isNotEmpty) {
+        final oldModel = NeracaModel.fromMap(query.docs.first.data());
+        return oldModel.copyWithNewBulan(monthKey);
+      }
+    } catch (e) {
+      print("Warning: Gagal mencari fallback neraca $e");
+    }
+
+    return NeracaModel.defaultBalances(monthKey);
+  }
+
+  Future<void> saveNeraca(NeracaModel model) async {
+    await init();
+    if (_dummyMode) {
+      final header = _headers['neraca']!;
+      final map = model.toMap();
+      final row = header.map((k) => map[k]).toList();
+      await appendRow('neraca', row);
+      return;
+    }
+    
+    await _firestore!.collection('neraca').doc(model.idNeraca).set(model.toMap());
+  }
+
+  // --- SEMUA LAPORAN BULANAN (REKAP) ---
+  Future<List<LaporanBulananModel>> getSemuaLaporanBulanan() async {
+    await init();
+    if (_dummyMode) {
+      final rows = _dummyCollections['laporan_bulanan'] ?? [];
+      final header = _headers['laporan_bulanan']!;
+      final result = <LaporanBulananModel>[];
+      for (var i = 1; i < rows.length; i++) {
+        final row = rows[i];
+        final map = <String, dynamic>{};
+        for (var j = 0; j < header.length; j++) {
+          map[header[j]] = row[j];
+        }
+        result.add(LaporanBulananModel.fromMap(map));
+      }
+      return result;
+    }
+
+    final querySnapshot = await _firestore!.collection('laporan_bulanan').get();
+    return querySnapshot.docs
+        .map((doc) => LaporanBulananModel.fromMap(doc.data()))
+        .toList();
   }
 }

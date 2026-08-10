@@ -40,7 +40,10 @@ class DateFormatter {
   }
 
   static String toStorageDate(String value) {
-    final trimmed = value.trim();
+    var trimmed = value.trim();
+    if (trimmed.contains('T')) {
+      trimmed = trimmed.split('T').first;
+    }
     if (RegExp(r'^\d{4}-\d{2}-\d{2}$').hasMatch(trimmed)) return trimmed;
 
     final slash = RegExp(r'^(\d{1,2})/(\d{1,2})/(\d{4})$').firstMatch(trimmed);

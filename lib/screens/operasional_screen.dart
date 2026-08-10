@@ -112,6 +112,11 @@ class _OperasionalScreenState extends State<OperasionalScreen> {
         keterangan: _keterangan.text.trim(),
       );
       await FirebaseService.instance.saveOperasional(model);
+      await FirebaseService.instance.addNotification(
+        title: 'Pengeluaran Dicatat',
+        message: 'Biaya operasional baru ( ${model.namaBiaya} ) sebesar ${CurrencyFormatter.format(model.nominal)} telah dicatat.',
+        type: 'expense',
+      );
       if (!mounted) return;
       LoadingDialog.hide(context);
       ScaffoldMessenger.of(context).showSnackBar(

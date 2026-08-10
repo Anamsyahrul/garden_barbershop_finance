@@ -8,6 +8,9 @@ import '../utils/currency_formatter.dart';
 import '../utils/date_formatter.dart';
 import '../widgets/app_page_widgets.dart';
 import '../widgets/responsive_scaffold.dart';
+import '../widgets/notification_bell.dart';
+import '../utils/migration_tool.dart';
+import '../services/migration_service.dart';
 import 'akun_pengguna_screen.dart';
 import 'buku_kas_screen.dart';
 import 'capster_screen.dart';
@@ -63,7 +66,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
         jumlahCapsterAktif: 1,
         totalBagianCapster:
             ownLaporan.fold(0, (total, item) => total + item.bagianCapster),
-        totalBagianPondok: 0,
+        totalBagianPondok:
+            ownLaporan.fold(0, (total, item) => total + item.bagianPondok),
         user: user,
       );
     }
@@ -88,11 +92,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
       appBar: AppBar(
         title: const Text('Dashboard'),
         actions: [
+
+          const NotificationBell(),
           Padding(
             padding: const EdgeInsets.only(right: 10),
             child: IconButton.filledTonal(
               tooltip: 'Refresh data',
-              onPressed: () => setState(() => _future = _load()),
+              onPressed: () {
+                setState(() {
+                  _future = _load();
+                });
+              },
               icon: const Icon(Icons.refresh_rounded),
             ),
           ),
@@ -156,9 +166,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           SizedBox(
                             width: itemWidth,
                             child: CompactMetricCard(
-                              title: personalView
-                                  ? 'Bagian Outlet'
-                                  : 'Bagian Pondok',
+                              title: 'Bagian Pondok',
                               value: CurrencyFormatter.format(data.totalBagianPondok),
                               icon: Icons.account_balance_rounded,
                               tint: AppColors.teal,
