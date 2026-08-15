@@ -172,6 +172,11 @@ class _BukuKasScreenState extends State<BukuKasScreen> {
     return ResponsiveScaffold(
       currentRoute: BukuKasScreen.routeName,
       appBar: AppBar(title: const Text('Buku Kas Umum')),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _simpan,
+        icon: const Icon(Icons.save_outlined),
+        label: const Text('Simpan'),
+      ),
       body: Form(
         key: _formKey,
         child: ListView(
@@ -200,11 +205,6 @@ class _BukuKasScreenState extends State<BukuKasScreen> {
                   onTap: _pilihTanggal,
                 ),
                 const SizedBox(height: 12),
-                CustomTextField(
-                  controller: _uraian,
-                  label: 'Uraian',
-                  validator: (value) => Validators.required(value, 'Uraian'),
-                ),
                 DropdownButtonFormField<String>(
                   value: _akun,
                   decoration: const InputDecoration(
@@ -219,6 +219,11 @@ class _BukuKasScreenState extends State<BukuKasScreen> {
                       setState(() => _akun = value ?? akunBukuKas.first),
                 ),
                 const SizedBox(height: 12),
+                CustomTextField(
+                  controller: _uraian,
+                  label: 'Uraian',
+                  validator: (value) => Validators.required(value, 'Uraian'),
+                ),
                 CustomTextField(
                   controller: _penerimaan,
                   label: 'Penerimaan',
@@ -239,12 +244,6 @@ class _BukuKasScreenState extends State<BukuKasScreen> {
                 ),
                 CustomTextField(controller: _keterangan, label: 'Keterangan'),
                 _saldoPreviewCard(),
-                const SizedBox(height: 12),
-                FilledButton.icon(
-                  onPressed: _simpan,
-                  icon: const Icon(Icons.save_outlined),
-                  label: const Text('Simpan Buku Kas'),
-                ),
               ],
             ),
             const SizedBox(height: 14),

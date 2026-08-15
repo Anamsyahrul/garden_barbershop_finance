@@ -57,11 +57,13 @@ class _LaporanScreenState extends State<LaporanScreen> {
       final capster = await firebase.getCapsterAktif();
       final pendapatan = await firebase.getPendapatanByMonth(bulanKey);
       final operasional = await firebase.getOperasionalByMonth(bulanKey);
+      final kasbon = await firebase.getKasbonByMonth(bulanKey);
       var laporan = CalculationService().generateLaporanBulanan(
         bulan: bulanKey,
         capsterAktif: capster,
         pendapatan: pendapatan,
         operasional: operasional,
+        kasbon: kasbon,
       );
       if (user?.role == UserRole.capster ||
           user?.role == UserRole.adminHarian) {
@@ -89,81 +91,6 @@ class _LaporanScreenState extends State<LaporanScreen> {
     }
   }
 
-  Future<void> _simpan() async {
-    if (_laporan.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Hitung laporan terlebih dahulu')),
-      );
-      return;
-    }
-    final user = await AuthService().currentUser();
-    if (user?.role == UserRole.capster || user?.role == UserRole.adminHarian) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Role ini hanya dapat melihat laporan terkait'),
-        ),
-      );
-      return;
-    }
-    LoadingDialog.show(context,
-        message: 'Menyimpan laporan ke Cloud Firestore...');
-    try {
-      final firebase = FirebaseService.instance;
-      await firebase.saveLaporanBulanan(_laporan);
-      await _simpanPendapatanUsahaPondok(firebase);
-      if (!mounted) return;
-      LoadingDialog.hide(context);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Laporan tersimpan. Bagian pondok otomatis masuk ke kas umum',
-          ),
-        ),
-      );
-    } catch (error) {
-      if (!mounted) return;
-      LoadingDialog.hide(context);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Gagal menyimpan laporan: $error')),
-      );
-    }
-  }
-
-  Future<void> _simpanPendapatanUsahaPondok(
-    FirebaseService firebase,
-  ) async {
-    final totalBagianPondok =
-        _laporan.fold(0, (total, item) => total + item.bagianPondok);
-    if (totalBagianPondok <= 0) return;
-
-    final bulanKey = DateFormatter.toStorageMonth(_bulan.text);
-    final idKas = 'K-PONDOK-$bulanKey';
-    final tanggal = _tanggalAkhirBulan(bulanKey);
-    final saldoSebelumnya = await firebase.getSaldoSebelumKas(tanggal, idKas);
-    final model = BukuKasModel(
-      idKas: idKas,
-      tanggal: tanggal,
-      uraian:
-          'Pendapatan usaha pondok bulan ${DateFormatter.displayMonth(bulanKey)}',
-      akun: 'Pendapatan Usaha',
-      penerimaan: totalBagianPondok,
-      pengeluaran: 0,
-      saldo: saldoSebelumnya + totalBagianPondok,
-      keterangan: 'Otomatis dari bagian pondok pada laporan pembagian hasil',
-    );
-    await firebase.upsertBukuKas(model);
-  }
-
-  String _tanggalAkhirBulan(String bulan) {
-    final parts = bulan.split('-');
-    if (parts.length != 2) return DateFormatter.formatDateKey(DateTime.now());
-    final year = int.tryParse(parts[0]);
-    final month = int.tryParse(parts[1]);
-    if (year == null || month == null) {
-      return DateFormatter.formatDateKey(DateTime.now());
-    }
-    return DateFormatter.formatDateKey(DateTime(year, month + 1, 0));
-  }
 
   Future<void> _exportPdf() async {
     final user = await AuthService().currentUser();
@@ -251,21 +178,11 @@ class _LaporanScreenState extends State<LaporanScreen> {
                 ),
                 onTap: _pilihBulan,
               ),
-              const SizedBox(width: 12),
               const SizedBox(height: 12),
-              ResponsiveActionRow(
-                children: [
-                  FilledButton.icon(
-                    onPressed: _loading ? null : _hitung,
-                    icon: const Icon(Icons.calculate_outlined),
-                    label: const Text('Hitung Laporan'),
-                  ),
-                  OutlinedButton.icon(
-                    onPressed: _simpan,
-                    icon: const Icon(Icons.save_outlined),
-                    label: const Text('Simpan Laporan'),
-                  ),
-                ],
+              FilledButton.icon(
+                onPressed: _loading ? null : _hitung,
+                icon: const Icon(Icons.calculate_outlined),
+                label: const Text('Hitung Laporan'),
               ),
             ],
           ),
@@ -292,6 +209,8 @@ class _LaporanScreenState extends State<LaporanScreen> {
                       DataColumn(label: Text('Operasional/Capster')),
                       DataColumn(label: Text('Pendapatan Bersih')),
                       DataColumn(label: Text('Bagian Capster')),
+                      DataColumn(label: Text('Potongan Kasbon')),
+                      DataColumn(label: Text('Sisa Diterima')),
                       DataColumn(label: Text('Bagian Pondok')),
                     ],
                     rows: [
@@ -308,6 +227,10 @@ class _LaporanScreenState extends State<LaporanScreen> {
                                 _laporan[i].pendapatanBersih))),
                             DataCell(Text(CurrencyFormatter.format(
                                 _laporan[i].bagianCapster))),
+                            DataCell(Text(CurrencyFormatter.format(
+                                _laporan[i].totalKasbon))),
+                            DataCell(Text(CurrencyFormatter.format(
+                                _laporan[i].sisaDiterimaCapster))),
                             DataCell(Text(CurrencyFormatter.format(
                                 _laporan[i].bagianPondok))),
                           ],

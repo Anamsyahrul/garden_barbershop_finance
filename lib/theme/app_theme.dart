@@ -136,6 +136,7 @@ class AppTheme {
             TextStyle(color: AppColors.charcoal, fontWeight: FontWeight.w700),
       )),
       inputDecorationTheme: InputDecorationTheme(
+        floatingLabelBehavior: FloatingLabelBehavior.always,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(18),
           borderSide: const BorderSide(color: AppColors.line),
@@ -157,7 +158,9 @@ class AppTheme {
         contentPadding:
             const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         labelStyle: const TextStyle(
-            color: AppColors.muted, fontWeight: FontWeight.w600),
+            color: AppColors.muted, fontWeight: FontWeight.w600, height: 1.0),
+        floatingLabelStyle: const TextStyle(
+            color: AppColors.tealDark, fontWeight: FontWeight.w700, height: 1.0),
         hintStyle: const TextStyle(color: AppColors.muted),
         prefixIconColor: AppColors.teal,
         suffixIconColor: AppColors.muted,

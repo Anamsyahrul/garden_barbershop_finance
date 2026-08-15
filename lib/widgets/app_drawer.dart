@@ -9,6 +9,7 @@ import '../screens/layanan_screen.dart';
 import '../screens/neraca_screen.dart';
 import '../screens/login_screen.dart';
 import '../screens/operasional_screen.dart';
+import '../screens/kasbon_screen.dart';
 import '../screens/pendapatan_harian_screen.dart';
 import '../services/auth_service.dart';
 import '../theme/app_theme.dart';
@@ -45,6 +46,8 @@ class AppDrawer extends StatelessWidget {
                       'Buku Kas Umum', BukuKasScreen.routeName),
                   _item(context, Icons.receipt_long_rounded, 'Operasional',
                       OperasionalScreen.routeName),
+                  _item(context, Icons.money_off_rounded, 'Kasbon Karyawan',
+                      KasbonScreen.routeName),
                   _item(context, Icons.account_balance_rounded, 'Catatan Harta',
                       NeracaScreen.routeName),
                 ],
@@ -57,6 +60,8 @@ class AppDrawer extends StatelessWidget {
                       'Buku Kas Umum', BukuKasScreen.routeName),
                   _item(context, Icons.receipt_long_rounded, 'Operasional',
                       OperasionalScreen.routeName),
+                  _item(context, Icons.money_off_rounded, 'Kasbon Karyawan',
+                      KasbonScreen.routeName),
                   _item(context, Icons.account_balance_rounded, 'Catatan Harta',
                       NeracaScreen.routeName),
                 ],
@@ -166,7 +171,7 @@ class _DrawerHero extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const _BrandMark(size: 52),
+              _BrandMark(size: 52),
               const SizedBox(height: 16),
               const Text(
                 'Garden Barbershop',
@@ -206,26 +211,11 @@ class _BrandMark extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.16),
-        borderRadius: BorderRadius.circular(18),
-        border:
-            Border.all(color: Colors.white.withValues(alpha: 0.26), width: 1.3),
-      ),
-      child: const Center(
-        child: Text(
-          'G',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 26,
-            fontWeight: FontWeight.w900,
-            height: 1.1,
-          ),
-        ),
-      ),
+    return Image.asset(
+      'assets/branding/garden_white_logo.png',
+      width: size * 2.8,
+      height: size * 1.5,
+      fit: BoxFit.contain,
     );
   }
 }

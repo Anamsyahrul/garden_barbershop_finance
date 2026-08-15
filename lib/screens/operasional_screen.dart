@@ -144,7 +144,7 @@ class _OperasionalScreenState extends State<OperasionalScreen> {
     if (!mounted) return;
     LoadingDialog.show(context);
     try {
-      await FirebaseService.instance.deleteOperasional(data.idOperasional);
+      await FirebaseService.instance.deleteOperasional(data);
       if (!mounted) return;
       LoadingDialog.hide(context);
       ScaffoldMessenger.of(context).showSnackBar(

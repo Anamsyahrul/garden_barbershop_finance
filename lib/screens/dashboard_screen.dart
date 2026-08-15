@@ -11,6 +11,11 @@ import '../widgets/responsive_scaffold.dart';
 import '../widgets/notification_bell.dart';
 import '../utils/migration_tool.dart';
 import '../services/migration_service.dart';
+import '../models/capster_model.dart';
+import '../models/pendapatan_harian_model.dart';
+import '../models/user_role.dart';
+import '../models/user_model.dart';
+import '../models/laporan_bulanan_model.dart';
 import 'akun_pengguna_screen.dart';
 import 'buku_kas_screen.dart';
 import 'capster_screen.dart';
@@ -30,6 +35,7 @@ class DashboardScreen extends StatefulWidget {
 
 class _DashboardScreenState extends State<DashboardScreen> {
   late Future<_DashboardData> _future;
+  DateTime _selectedDate = DateTime.now();
 
   @override
   void initState() {
@@ -39,36 +45,43 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Future<_DashboardData> _load() async {
     final user = await AuthService().currentUser();
-    final bulan = DateFormatter.formatMonthKey(DateTime.now());
+    final bulan = DateFormatter.formatMonthKey(_selectedDate);
     final firebase = FirebaseService.instance;
     final calc = CalculationService();
     final capster = await firebase.getCapsterAktif();
     final pendapatan = await firebase.getPendapatanByMonth(bulan);
     final operasional = await firebase.getOperasionalByMonth(bulan);
+    final kasbon = await firebase.getKasbonByMonth(bulan);
     final laporan = calc.generateLaporanBulanan(
       bulan: bulan,
       capsterAktif: capster,
       pendapatan: pendapatan,
       operasional: operasional,
+      kasbon: kasbon,
     );
     if ((user?.role == UserRole.capster ||
             user?.role == UserRole.adminHarian) &&
         user!.idCapster.isNotEmpty) {
       final ownPendapatan = pendapatan
-          .where((item) => item.idCapster == user.idCapster)
-          .fold(0, (total, item) => total + item.pendapatan);
+          .where((item) => item.idCapster == user.idCapster);
+      final totalPendapatanKotor = ownPendapatan.fold(0, (total, item) => total + item.pendapatan);
+      final totalCustomerBulanIni = ownPendapatan.fold(0, (total, item) => total + item.totalCustomer);
       final ownLaporan =
           laporan.where((item) => item.idCapster == user.idCapster).toList();
       return _DashboardData(
-        totalPendapatan: ownPendapatan,
+        totalPendapatan: totalPendapatanKotor,
         totalOperasional:
             ownLaporan.isEmpty ? 0 : ownLaporan.first.operasionalPerCapster,
         jumlahCapsterAktif: 1,
+        totalCustomerBulanan: totalCustomerBulanIni,
         totalBagianCapster:
             ownLaporan.fold(0, (total, item) => total + item.bagianCapster),
         totalBagianPondok:
             ownLaporan.fold(0, (total, item) => total + item.bagianPondok),
         user: user,
+        semuaPendapatan: pendapatan,
+        semuaCapster: capster,
+        laporanBulanan: ownLaporan,
       );
     }
     return _DashboardData(
@@ -76,11 +89,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
           pendapatan.fold(0, (total, item) => total + item.pendapatan),
       totalOperasional: calc.hitungTotalOperasional(operasional),
       jumlahCapsterAktif: capster.length,
+      totalCustomerBulanan: pendapatan.fold(0, (total, item) => total + item.totalCustomer),
       totalBagianCapster:
           laporan.fold(0, (total, item) => total + item.bagianCapster),
       totalBagianPondok:
           laporan.fold(0, (total, item) => total + item.bagianPondok),
       user: user,
+      semuaPendapatan: pendapatan,
+      semuaCapster: capster,
+      laporanBulanan: laporan,
     );
   }
 
@@ -91,20 +108,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
       extendBody: true,
       appBar: AppBar(
         title: const Text('Dashboard'),
-        actions: [
-
-          const NotificationBell(),
+        actions: const [
           Padding(
-            padding: const EdgeInsets.only(right: 10),
-            child: IconButton.filledTonal(
-              tooltip: 'Refresh data',
-              onPressed: () {
-                setState(() {
-                  _future = _load();
-                });
-              },
-              icon: const Icon(Icons.refresh_rounded),
-            ),
+            padding: EdgeInsets.only(right: 10),
+            child: NotificationBell(),
           ),
         ],
       ),
@@ -153,12 +160,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           SizedBox(
                             width: itemWidth,
                             child: CompactMetricCard(
-                              title: personalView
-                                  ? 'Akun Capster'
-                                  : 'Capster Aktif',
-                              value: personalView
-                                  ? (data.user?.name ?? '-')
-                                  : '${data.jumlahCapsterAktif} orang',
+                              title: 'Total Customer',
+                              value: '${data.totalCustomerBulanan} orang',
                               icon: Icons.groups_2_rounded,
                               tint: AppColors.blue,
                             ),
@@ -188,35 +191,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     },
                   ),
                   const SizedBox(height: 20),
-                  PremiumSectionTitle(
-                    title: 'Menu Utama',
-                    subtitle: 'Akses fitur yang paling sering dipakai',
-                    action: TextButton.icon(
-                      onPressed: () => setState(() => _future = _load()),
-                      icon: const Icon(Icons.sync_rounded, size: 18),
-                      label: const Text('Sync'),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  ..._mainActions(context, role),
+                  _dailyReportSection(context, data),
                   const SizedBox(height: 20),
-                  PremiumSectionTitle(
-                    title: 'Kelola Data',
-                    subtitle: 'Menu administrasi dan laporan',
-                  ),
-                  const SizedBox(height: 12),
-                  LayoutBuilder(
-                    builder: (context, constraints) {
-                      final width = constraints.maxWidth >= 640
-                          ? (constraints.maxWidth - 12) / 2
-                          : constraints.maxWidth;
-                      return Wrap(
-                        spacing: 12,
-                        runSpacing: 12,
-                        children: _secondaryActions(context, role, width),
-                      );
-                    },
-                  ),
+                  _monthlyReportSection(context, data),
+                  const SizedBox(height: 30),
                 ],
               );
             },
@@ -266,7 +244,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Widget _primaryBalance(_DashboardData data) {
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         gradient: AppColors.primaryGradient,
         borderRadius: AppTheme.radiusLarge,
@@ -281,7 +259,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             child: Icon(
               Icons.cut_rounded,
               color: Colors.white.withValues(alpha: 0.1),
-              size: 140,
+              size: 110,
             ),
           ),
           Column(
@@ -290,18 +268,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
               Row(
                 children: [
                   Container(
-                    width: 48,
-                    height: 48,
+                    width: 42,
+                    height: 42,
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(16),
+                      borderRadius: BorderRadius.circular(14),
                       border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
                     ),
                     child: const Center(
-                      child: Icon(Icons.storefront_rounded, color: Colors.white, size: 24),
+                      child: Icon(Icons.storefront_rounded, color: Colors.white, size: 22),
                     ),
                   ),
-                  const SizedBox(width: 14),
+                  const SizedBox(width: 12),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -311,8 +289,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           style: TextStyle(
                             color: Colors.white, 
                             fontWeight: FontWeight.w900, 
-                            fontSize: 14,
-                            letterSpacing: 1.5,
+                            fontSize: 13,
+                            letterSpacing: 1.2,
                           ),
                         ),
                         const SizedBox(height: 2),
@@ -322,25 +300,25 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               : '${data.user!.name}',
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: TextStyle(color: Colors.white.withValues(alpha: 0.9), fontWeight: FontWeight.w600, fontSize: 13),
+                          style: TextStyle(color: Colors.white.withValues(alpha: 0.9), fontWeight: FontWeight.w600, fontSize: 12.5),
                         ),
                       ],
                     ),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(999),
                     ),
                     child: Text(
                       data.user?.role.label.toUpperCase() ?? 'LIVE', 
-                      style: const TextStyle(color: AppColors.tealDark, fontWeight: FontWeight.w900, fontSize: 10, letterSpacing: 1.0)
+                      style: const TextStyle(color: AppColors.tealDark, fontWeight: FontWeight.w900, fontSize: 9, letterSpacing: 1.0)
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 28),
+              const SizedBox(height: 20),
               Text(
                 'PENDAPATAN BULAN INI',
                 style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontWeight: FontWeight.w800, fontSize: 11, letterSpacing: 1.5),
@@ -357,171 +335,207 @@ class _DashboardScreenState extends State<DashboardScreen> {
         );
   }
 
-  List<Widget> _mainActions(BuildContext context, UserRole role) {
-    final actions = <_ActionData>[];
-    if (role == UserRole.admin || role == UserRole.adminHarian) {
-      actions.add(_ActionData(
-          'Input Harian',
-          'Catat transaksi',
-          Icons.payments_rounded,
-          PendapatanHarianScreen.routeName,
-          AppColors.teal));
-    }
-    if (role == UserRole.admin || role == UserRole.pemilik) {
-      actions.add(_ActionData(
-          'Buku Kas',
-          'Penerimaan & keluar',
-          Icons.account_balance_wallet_rounded,
-          BukuKasScreen.routeName,
-          AppColors.blue));
-      actions.add(_ActionData(
-          'Operasional',
-          'Biaya bulanan',
-          Icons.receipt_long_rounded,
-          OperasionalScreen.routeName,
-          AppColors.brass));
-    }
-    actions.add(_ActionData(
-        role == UserRole.capster ? 'Laporan Saya' : 'Laporan',
-        'Pembagian hasil',
-        Icons.table_chart_rounded,
-        LaporanScreen.routeName,
-        AppColors.emerald));
+  Widget _dailyReportSection(BuildContext context, _DashboardData data) {
+    final dateStr = DateFormatter.formatDateKey(_selectedDate);
+    final dailyPendapatan = data.semuaPendapatan.where((p) => p.tanggal == dateStr).toList();
+    final role = data.user?.role ?? UserRole.admin;
+    final isPersonalView = role == UserRole.capster || role == UserRole.adminHarian;
 
-    return [
-      LayoutBuilder(
-        builder: (context, constraints) {
-          final width = constraints.maxWidth >= 720
-              ? (constraints.maxWidth - 36) / 4
-              : (constraints.maxWidth - 12) / 2;
-          return Wrap(
-            spacing: 12,
-            runSpacing: 12,
-            children: [
-              for (final action in actions)
-                SizedBox(
-                  width: width,
-                  child: _quickActionCard(context, action),
+    final displayedPendapatan = isPersonalView 
+        ? dailyPendapatan.where((p) => p.idCapster == data.user?.idCapster).toList()
+        : dailyPendapatan;
+
+    var totalKotor = 0;
+    var totalCustomer = 0;
+    for (var p in displayedPendapatan) {
+      totalKotor += p.pendapatan;
+      totalCustomer += p.totalCustomer;
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        PremiumSectionTitle(
+          title: 'Laporan Harian',
+          subtitle: 'Kinerja harian interaktif',
+          action: TextButton.icon(
+            onPressed: () async {
+              final picked = await showDatePicker(
+                context: context,
+                initialDate: _selectedDate,
+                firstDate: DateTime(2020),
+                lastDate: DateTime.now().add(const Duration(days: 30)),
+              );
+              if (picked != null && picked != _selectedDate) {
+                final oldMonth = DateFormatter.formatMonthKey(_selectedDate);
+                final newMonth = DateFormatter.formatMonthKey(picked);
+                setState(() {
+                  _selectedDate = picked;
+                  if (oldMonth != newMonth) {
+                    _future = _load();
+                  }
+                });
+              }
+            },
+            icon: const Icon(Icons.calendar_month_rounded, size: 18),
+            label: Text(DateFormatter.formatDate(_selectedDate)),
+          ),
+        ),
+        const SizedBox(height: 12),
+        if (displayedPendapatan.isEmpty)
+          Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: AppColors.paper,
+              borderRadius: AppTheme.radiusLarge,
+              border: Border.all(color: AppColors.line),
+            ),
+            child: const Center(
+              child: Text(
+                'Belum ada data pendapatan untuk hari ini.',
+                style: TextStyle(color: AppColors.muted, fontWeight: FontWeight.w600),
+              ),
+            ),
+          )
+        else
+          Container(
+            decoration: BoxDecoration(
+              color: AppColors.paper,
+              borderRadius: AppTheme.radiusLarge,
+              border: Border.all(color: AppColors.line),
+              boxShadow: AppTheme.softShadow,
+            ),
+            child: ClipRRect(
+              borderRadius: AppTheme.radiusLarge,
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: DataTable(
+                  headingRowColor: WidgetStatePropertyAll(AppColors.teal.withValues(alpha: 0.08)),
+                  dataRowMaxHeight: 56,
+                  columns: const [
+                    DataColumn(label: Text('Nama Capster', style: TextStyle(fontWeight: FontWeight.w800, color: AppColors.tealDark))),
+                    DataColumn(label: Text('RG/RC', style: TextStyle(fontWeight: FontWeight.w800, color: AppColors.tealDark)), numeric: true),
+                    DataColumn(label: Text('CS', style: TextStyle(fontWeight: FontWeight.w800, color: AppColors.tealDark)), numeric: true),
+                    DataColumn(label: Text('CU', style: TextStyle(fontWeight: FontWeight.w800, color: AppColors.tealDark)), numeric: true),
+                    DataColumn(label: Text('Total', style: TextStyle(fontWeight: FontWeight.w800, color: AppColors.tealDark)), numeric: true),
+                    DataColumn(label: Text('Pendapatan', style: TextStyle(fontWeight: FontWeight.w800, color: AppColors.tealDark)), numeric: true),
+                  ],
+                  rows: [
+                    for (var p in displayedPendapatan)
+                      DataRow(
+                        cells: [
+                          DataCell(Text(p.namaCapster, style: const TextStyle(fontWeight: FontWeight.w700, color: AppColors.charcoal))),
+                          DataCell(Text('${p.jumlahLayanan['RC'] ?? p.jumlahLayanan['RG'] ?? 0}')),
+                          DataCell(Text('${p.cs}')),
+                          DataCell(Text('${p.cu}')),
+                          DataCell(Text('${p.totalCustomer}', style: const TextStyle(fontWeight: FontWeight.w800))),
+                          DataCell(Text(CurrencyFormatter.format(p.pendapatan), style: const TextStyle(fontWeight: FontWeight.w800, color: AppColors.teal))),
+                        ],
+                      ),
+                    // Total Row
+                    if (!isPersonalView && displayedPendapatan.length > 1)
+                      DataRow(
+                        color: WidgetStatePropertyAll(AppColors.brass.withValues(alpha: 0.1)),
+                        cells: [
+                          const DataCell(Text('TOTAL', style: TextStyle(fontWeight: FontWeight.w900, color: AppColors.charcoal))),
+                          DataCell(Text('${displayedPendapatan.fold(0, (sum, p) => sum + (p.jumlahLayanan['RC'] ?? p.jumlahLayanan['RG'] ?? 0))}', style: const TextStyle(fontWeight: FontWeight.w900, color: AppColors.charcoal))),
+                          DataCell(Text('${displayedPendapatan.fold(0, (sum, p) => sum + p.cs)}', style: const TextStyle(fontWeight: FontWeight.w900, color: AppColors.charcoal))),
+                          DataCell(Text('${displayedPendapatan.fold(0, (sum, p) => sum + p.cu)}', style: const TextStyle(fontWeight: FontWeight.w900, color: AppColors.charcoal))),
+                          DataCell(Text('$totalCustomer', style: const TextStyle(fontWeight: FontWeight.w900, color: AppColors.charcoal))),
+                          DataCell(Text(CurrencyFormatter.format(totalKotor), style: const TextStyle(fontWeight: FontWeight.w900, color: AppColors.charcoal))),
+                        ],
+                      ),
+                  ],
                 ),
-            ],
-          );
-        },
-      ),
-    ];
+              ),
+            ),
+          ),
+      ],
+    );
   }
 
-  Widget _quickActionCard(BuildContext context, _ActionData action) {
-    return Material(
-      color: AppColors.paper,
-      borderRadius: AppTheme.radiusMedium,
-      child: InkWell(
-        borderRadius: AppTheme.radiusMedium,
-        onTap: () => Navigator.pushNamed(context, action.route),
-        child: Container(
-          padding: const EdgeInsets.all(14),
+  Widget _monthlyReportSection(BuildContext context, _DashboardData data) {
+    if (data.laporanBulanan.isEmpty) return const SizedBox.shrink();
+    
+    final role = data.user?.role ?? UserRole.admin;
+    final isPersonalView = role == UserRole.capster || role == UserRole.adminHarian;
+
+    final totalKotor = data.laporanBulanan.fold(0, (sum, item) => sum + item.pendapatanKotor);
+    final totalBersih = data.laporanBulanan.fold(0, (sum, item) => sum + item.pendapatanBersih);
+    final totalCapster = data.laporanBulanan.fold(0, (sum, item) => sum + item.bagianCapster);
+    final totalPondok = data.laporanBulanan.fold(0, (sum, item) => sum + item.bagianPondok);
+    final totalKasbonAll = data.laporanBulanan.fold(0, (sum, item) => sum + item.totalKasbon);
+    final totalSisaAll = data.laporanBulanan.fold(0, (sum, item) => sum + item.sisaDiterimaCapster);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        PremiumSectionTitle(
+          title: 'Laporan Bulanan',
+          subtitle: 'Kinerja bulan ${DateFormatter.displayMonth(DateFormatter.formatMonthKey(_selectedDate))}',
+        ),
+        const SizedBox(height: 12),
+        Container(
           decoration: BoxDecoration(
             color: AppColors.paper,
-            borderRadius: AppTheme.radiusMedium,
+            borderRadius: AppTheme.radiusLarge,
             border: Border.all(color: AppColors.line),
             boxShadow: AppTheme.softShadow,
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: action.tint.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Icon(action.icon, color: action.tint, size: 24),
+          child: ClipRRect(
+            borderRadius: AppTheme.radiusLarge,
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: DataTable(
+                headingRowColor: WidgetStatePropertyAll(AppColors.blue.withValues(alpha: 0.08)),
+                dataRowMaxHeight: 56,
+                columns: const [
+                  DataColumn(label: Text('Nama Capster', style: TextStyle(fontWeight: FontWeight.w800, color: AppColors.navy))),
+                  DataColumn(label: Text('Pendapatan\nKotor', style: TextStyle(fontWeight: FontWeight.w800, color: AppColors.navy)), numeric: true),
+                  DataColumn(label: Text('Beban\nOperasional', style: TextStyle(fontWeight: FontWeight.w800, color: AppColors.navy)), numeric: true),
+                  DataColumn(label: Text('Pendapatan\nBersih', style: TextStyle(fontWeight: FontWeight.w800, color: AppColors.navy)), numeric: true),
+                  DataColumn(label: Text('Bagian\nCapster', style: TextStyle(fontWeight: FontWeight.w800, color: AppColors.navy)), numeric: true),
+                  DataColumn(label: Text('Potongan\nKasbon', style: TextStyle(fontWeight: FontWeight.w800, color: AppColors.navy)), numeric: true),
+                  DataColumn(label: Text('Sisa\nDiterima', style: TextStyle(fontWeight: FontWeight.w800, color: AppColors.navy)), numeric: true),
+                  DataColumn(label: Text('Bagian\nPondok', style: TextStyle(fontWeight: FontWeight.w800, color: AppColors.navy)), numeric: true),
+                ],
+                rows: [
+                  for (var lap in data.laporanBulanan)
+                    DataRow(
+                      cells: [
+                        DataCell(Text(lap.namaCapster, style: const TextStyle(fontWeight: FontWeight.w700, color: AppColors.charcoal))),
+                        DataCell(Text(CurrencyFormatter.format(lap.pendapatanKotor))),
+                        DataCell(Text(CurrencyFormatter.format(lap.operasionalPerCapster), style: const TextStyle(color: AppColors.danger))),
+                        DataCell(Text(CurrencyFormatter.format(lap.pendapatanBersih), style: const TextStyle(fontWeight: FontWeight.w700))),
+                        DataCell(Text(CurrencyFormatter.format(lap.bagianCapster), style: const TextStyle(fontWeight: FontWeight.w800, color: AppColors.brass))),
+                        DataCell(Text(CurrencyFormatter.format(lap.totalKasbon), style: const TextStyle(color: AppColors.danger))),
+                        DataCell(Text(CurrencyFormatter.format(lap.sisaDiterimaCapster), style: const TextStyle(fontWeight: FontWeight.w900, color: AppColors.brass))),
+                        DataCell(Text(CurrencyFormatter.format(lap.bagianPondok), style: const TextStyle(fontWeight: FontWeight.w800, color: AppColors.teal))),
+                      ],
+                    ),
+                  // Total Row
+                  if (!isPersonalView && data.laporanBulanan.length > 1)
+                    DataRow(
+                      color: WidgetStatePropertyAll(AppColors.blue.withValues(alpha: 0.1)),
+                      cells: [
+                        const DataCell(Text('TOTAL', style: TextStyle(fontWeight: FontWeight.w900, color: AppColors.navy))),
+                        DataCell(Text(CurrencyFormatter.format(totalKotor), style: const TextStyle(fontWeight: FontWeight.w900, color: AppColors.navy))),
+                        DataCell(Text('-', style: const TextStyle(fontWeight: FontWeight.w900, color: AppColors.navy))),
+                        DataCell(Text(CurrencyFormatter.format(totalBersih), style: const TextStyle(fontWeight: FontWeight.w900, color: AppColors.navy))),
+                        DataCell(Text(CurrencyFormatter.format(totalCapster), style: const TextStyle(fontWeight: FontWeight.w900, color: AppColors.brass))),
+                        DataCell(Text(CurrencyFormatter.format(totalKasbonAll), style: const TextStyle(fontWeight: FontWeight.w900, color: AppColors.danger))),
+                        DataCell(Text(CurrencyFormatter.format(totalSisaAll), style: const TextStyle(fontWeight: FontWeight.w900, color: AppColors.brass))),
+                        DataCell(Text(CurrencyFormatter.format(totalPondok), style: const TextStyle(fontWeight: FontWeight.w900, color: AppColors.teal))),
+                      ],
+                    ),
+                ],
               ),
-              const SizedBox(height: 12),
-              Text(
-                action.title,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                    color: AppColors.charcoal,
-                    fontWeight: FontWeight.w900,
-                    fontSize: 14),
-              ),
-              const SizedBox(height: 3),
-              Text(
-                action.subtitle,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                    color: AppColors.muted,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 11.5),
-              ),
-            ],
+            ),
           ),
         ),
-      ),
+      ],
     );
   }
-
-  Widget _secondaryAction(BuildContext context, String title, IconData icon,
-      String route, double width) {
-    return SizedBox(
-      width: width,
-      child: MobileInfoTile(
-        title: title,
-        subtitle: 'Buka dan kelola $title',
-        icon: icon,
-        onTap: () => Navigator.pushNamed(context, route),
-        tint: AppColors.tealDark,
-      ),
-    );
-  }
-
-  List<Widget> _secondaryActions(
-      BuildContext context, UserRole role, double width) {
-    if (role == UserRole.admin) {
-      return [
-        _secondaryAction(context, 'Data Capster', Icons.people_alt_rounded,
-            CapsterScreen.routeName, width),
-        _secondaryAction(context, 'Akun Pengguna',
-            Icons.manage_accounts_rounded, AkunPenggunaScreen.routeName, width),
-        _secondaryAction(context, 'Data Layanan', Icons.design_services_rounded,
-            LayananScreen.routeName, width),
-        _secondaryAction(context, 'Laporan Hasil', Icons.table_chart_rounded,
-            LaporanScreen.routeName, width),
-      ];
-    }
-    if (role == UserRole.adminHarian) {
-      return [
-        _secondaryAction(context, 'Input Pendapatan', Icons.payments_rounded,
-            PendapatanHarianScreen.routeName, width),
-        _secondaryAction(context, 'Laporan Saya', Icons.table_chart_rounded,
-            LaporanScreen.routeName, width),
-      ];
-    }
-    if (role == UserRole.pemilik) {
-      return [
-        _secondaryAction(context, 'Laporan Hasil', Icons.table_chart_rounded,
-            LaporanScreen.routeName, width)
-      ];
-    }
-    return [
-      _secondaryAction(context, 'Laporan Saya', Icons.table_chart_rounded,
-          LaporanScreen.routeName, width)
-    ];
-  }
-}
-
-class _ActionData {
-  const _ActionData(
-      this.title, this.subtitle, this.icon, this.route, this.tint);
-
-  final String title;
-  final String subtitle;
-  final IconData icon;
-  final String route;
-  final Color tint;
 }
 
 class _DashboardData {
@@ -529,15 +543,23 @@ class _DashboardData {
     required this.totalPendapatan,
     required this.totalOperasional,
     required this.jumlahCapsterAktif,
+    required this.totalCustomerBulanan,
     required this.totalBagianCapster,
     required this.totalBagianPondok,
     required this.user,
+    required this.semuaPendapatan,
+    required this.semuaCapster,
+    required this.laporanBulanan,
   });
 
   final int totalPendapatan;
   final int totalOperasional;
   final int jumlahCapsterAktif;
+  final int totalCustomerBulanan;
   final int totalBagianCapster;
   final int totalBagianPondok;
   final AppUser? user;
+  final List<PendapatanHarianModel> semuaPendapatan;
+  final List<CapsterModel> semuaCapster;
+  final List<LaporanBulananModel> laporanBulanan;
 }

@@ -49,200 +49,104 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Color(0xFFE9FFF8), AppColors.linen, AppColors.paper],
-          ),
-        ),
-        child: Stack(
-          children: [
-            Positioned(
-              top: -80,
-              right: -70,
-              child:
-                  _ambientCircle(210, AppColors.teal.withValues(alpha: 0.13)),
+      backgroundColor: AppColors.paper, // Use a solid lightweight background color
+      body: SafeArea(
+        child: Align(
+          alignment: const Alignment(0, -0.15),
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 380),
+              child: _unifiedCard(),
             ),
-            Positioned(
-              top: 190,
-              left: -90,
-              child:
-                  _ambientCircle(180, AppColors.brass.withValues(alpha: 0.12)),
-            ),
-            Positioned(
-              bottom: -95,
-              right: -40,
-              child:
-                  _ambientCircle(190, AppColors.blue.withValues(alpha: 0.08)),
-            ),
-            SafeArea(
-              child: Align(
-                alignment: const Alignment(0, -0.3),
-                child: SingleChildScrollView(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 22, vertical: 26),
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 430),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        _brandHero(),
-                        const SizedBox(height: 18),
-                        _loginCard(),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _ambientCircle(double size, Color color) {
-    return IgnorePointer(
-      child: Container(
-        width: size,
-        height: size,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          gradient: RadialGradient(
-            colors: [color, color.withValues(alpha: 0)],
           ),
         ),
       ),
     );
   }
 
-  Widget _brandHero() {
+  Widget _unifiedCard() {
     return Container(
-      padding: const EdgeInsets.all(22),
-      decoration: BoxDecoration(
-        gradient: AppColors.primaryGradient,
-        borderRadius: AppTheme.radiusLarge,
-        boxShadow: AppTheme.floatingShadow,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: const Icon(Icons.content_cut_rounded, color: Colors.white, size: 20),
-              ),
-              const SizedBox(width: 12),
-              const Expanded(
-                child: Text(
-                  'GARDEN BARBERSHOP',
-                  style: TextStyle(
-                    color: Colors.white, 
-                    fontSize: 17, 
-                    fontWeight: FontWeight.w900, 
-                    letterSpacing: 0.5,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 14),
-          Text(
-            'Aplikasi manajemen pendapatan, operasional, dan pembagian hasil.',
-            style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.85), 
-              fontSize: 12.5, 
-              fontWeight: FontWeight.w500, 
-              height: 1.35,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _loginCard() {
-    return Container(
-      padding: const EdgeInsets.all(18),
+      width: double.infinity,
       decoration: BoxDecoration(
         color: AppColors.paper,
         borderRadius: AppTheme.radiusLarge,
-        border: Border.all(color: AppColors.line),
-        boxShadow: AppTheme.softShadow,
+        boxShadow: AppTheme.floatingShadow,
       ),
-      child: Form(
-        key: _formKey,
+      child: ClipRRect(
+        borderRadius: AppTheme.radiusLarge,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text(
-              'Masuk ke akun',
-              style: TextStyle(
-                  fontSize: 21,
-                  fontWeight: FontWeight.w900,
-                  color: AppColors.charcoal),
-            ),
-            const SizedBox(height: 4),
-            const Text(
-              'Gunakan akun sesuai role untuk mulai mengelola data.',
-              style: TextStyle(
-                  color: AppColors.muted,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 12.5),
-            ),
-            const SizedBox(height: 18),
-            TextFormField(
-              controller: _usernameController,
-              textInputAction: TextInputAction.next,
-              decoration: const InputDecoration(
-                labelText: 'Username',
-                prefixIcon: Icon(Icons.person_outline_rounded),
+            // Top Hero inside card
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+              decoration: const BoxDecoration(
+                gradient: AppColors.primaryGradient,
               ),
-              validator: (value) => Validators.required(value, 'Username'),
+              child: Image.asset(
+                'assets/branding/garden_white_logo.png',
+                height: 65,
+                fit: BoxFit.contain,
+              ),
             ),
-            const SizedBox(height: 13),
-            TextFormField(
-              controller: _passwordController,
-              obscureText: _obscurePassword,
-              textInputAction: TextInputAction.done,
-              onFieldSubmitted: (_) => _login(),
-              decoration: InputDecoration(
-                labelText: 'Password',
-                prefixIcon: const Icon(Icons.lock_outline_rounded),
-                suffixIcon: IconButton(
-                  tooltip: _obscurePassword
-                      ? 'Tampilkan password'
-                      : 'Sembunyikan password',
-                  onPressed: () =>
-                      setState(() => _obscurePassword = !_obscurePassword),
-                  icon: Icon(
-                    _obscurePassword
-                        ? Icons.visibility_outlined
-                        : Icons.visibility_off_outlined,
-                  ),
+            // Bottom Form
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 24, 24, 28),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    TextFormField(
+                      controller: _usernameController,
+                      textInputAction: TextInputAction.next,
+                      decoration: const InputDecoration(
+                        labelText: 'Username',
+                        prefixIcon: Icon(Icons.person_outline_rounded),
+                      ),
+                      validator: (value) => Validators.required(value, 'Username'),
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _passwordController,
+                      obscureText: _obscurePassword,
+                      textInputAction: TextInputAction.done,
+                      onFieldSubmitted: (_) => _login(),
+                      decoration: InputDecoration(
+                        labelText: 'Password',
+                        prefixIcon: const Icon(Icons.lock_outline_rounded),
+                        suffixIcon: IconButton(
+                          tooltip: _obscurePassword
+                              ? 'Tampilkan password'
+                              : 'Sembunyikan password',
+                          onPressed: () =>
+                              setState(() => _obscurePassword = !_obscurePassword),
+                          icon: Icon(
+                            _obscurePassword
+                                ? Icons.visibility_outlined
+                                : Icons.visibility_off_outlined,
+                          ),
+                        ),
+                      ),
+                      validator: (value) => Validators.required(value, 'Password'),
+                    ),
+                    const SizedBox(height: 28),
+                    FilledButton.icon(
+                      onPressed: _loading ? null : _login,
+                      icon: _loading
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(
+                                  strokeWidth: 2, color: Colors.white),
+                            )
+                          : const Icon(Icons.arrow_forward_rounded),
+                      label: const Text('Masuk Sekarang'),
+                    ),
+                  ],
                 ),
               ),
-              validator: (value) => Validators.required(value, 'Password'),
-            ),
-            const SizedBox(height: 18),
-            FilledButton.icon(
-              onPressed: _loading ? null : _login,
-              icon: _loading
-                  ? const SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(
-                          strokeWidth: 2, color: Colors.white),
-                    )
-                  : const Icon(Icons.arrow_forward_rounded),
-              label: const Text('Masuk Sekarang'),
             ),
           ],
         ),

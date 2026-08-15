@@ -9,6 +9,8 @@ class LaporanBulananModel {
     required this.pendapatanBersih,
     required this.bagianCapster,
     required this.bagianPondok,
+    required this.totalKasbon,
+    required this.sisaDiterimaCapster,
   });
 
   final String bulan;
@@ -20,6 +22,8 @@ class LaporanBulananModel {
   final int pendapatanBersih;
   final int bagianCapster;
   final int bagianPondok;
+  final int totalKasbon;
+  final int sisaDiterimaCapster;
 
   factory LaporanBulananModel.fromRow(List<dynamic> row) {
     return LaporanBulananModel(
@@ -32,6 +36,8 @@ class LaporanBulananModel {
       pendapatanBersih: row.length > 6 ? int.tryParse(row[6].toString()) ?? 0 : 0,
       bagianCapster: row.length > 7 ? int.tryParse(row[7].toString()) ?? 0 : 0,
       bagianPondok: row.length > 8 ? int.tryParse(row[8].toString()) ?? 0 : 0,
+      totalKasbon: row.length > 9 ? int.tryParse(row[9].toString()) ?? 0 : 0,
+      sisaDiterimaCapster: row.length > 10 ? int.tryParse(row[10].toString()) ?? 0 : 0,
     );
   }
 
@@ -45,6 +51,8 @@ class LaporanBulananModel {
         pendapatanBersih,
         bagianCapster,
         bagianPondok,
+        totalKasbon,
+        sisaDiterimaCapster,
       ];
 
   factory LaporanBulananModel.fromMap(Map<String, dynamic> map) {
@@ -58,6 +66,8 @@ class LaporanBulananModel {
       pendapatanBersih: map['pendapatan_bersih'] ?? 0,
       bagianCapster: map['bagian_capster'] ?? 0,
       bagianPondok: map['bagian_pondok'] ?? 0,
+      totalKasbon: map['total_kasbon'] ?? 0,
+      sisaDiterimaCapster: map['sisa_diterima_capster'] ?? 0,
     );
   }
 
@@ -72,6 +82,8 @@ class LaporanBulananModel {
       'pendapatan_bersih': pendapatanBersih,
       'bagian_capster': bagianCapster,
       'bagian_pondok': bagianPondok,
+      'total_kasbon': totalKasbon,
+      'sisa_diterima_capster': sisaDiterimaCapster,
     };
   }
 }

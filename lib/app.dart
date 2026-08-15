@@ -9,9 +9,11 @@ import 'screens/laporan_screen.dart';
 import 'screens/layanan_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/operasional_screen.dart';
+import 'screens/kasbon_screen.dart';
 import 'screens/pendapatan_harian_screen.dart';
 import 'screens/notification_screen.dart';
 import 'screens/neraca_screen.dart';
+import 'screens/splash_screen.dart';
 import 'services/auth_service.dart';
 import 'theme/app_theme.dart';
 import 'widgets/role_guard.dart';
@@ -32,8 +34,9 @@ class GardenFinanceApp extends StatelessWidget {
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      initialRoute: LoginScreen.routeName,
+      initialRoute: SplashScreen.routeName,
       routes: {
+        SplashScreen.routeName: (_) => const SplashScreen(),
         LoginScreen.routeName: (_) => const LoginScreen(),
         DashboardScreen.routeName: (_) => const DashboardScreen(),
         AkunPenggunaScreen.routeName: (_) => const RoleGuard(
@@ -59,6 +62,10 @@ class GardenFinanceApp extends StatelessWidget {
         OperasionalScreen.routeName: (_) => const RoleGuard(
               allowedRoles: [UserRole.admin, UserRole.pemilik],
               child: OperasionalScreen(),
+            ),
+        KasbonScreen.routeName: (_) => const RoleGuard(
+              allowedRoles: [UserRole.admin, UserRole.pemilik],
+              child: KasbonScreen(),
             ),
         LaporanScreen.routeName: (_) => const RoleGuard(
               allowedRoles: [

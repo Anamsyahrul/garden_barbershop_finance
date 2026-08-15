@@ -9,10 +9,11 @@ import '../models/operasional_model.dart';
 import '../models/pendapatan_harian_model.dart';
 import '../models/user_model.dart';
 import '../models/user_role.dart';
-import '../models/user_role.dart';
 import '../models/app_notification_model.dart';
 import '../models/neraca_model.dart';
+import '../models/kasbon_model.dart';
 import '../utils/date_formatter.dart';
+import '../services/calculation_service.dart';
 
 class FirebaseService {
   FirebaseService._();
@@ -85,6 +86,16 @@ class FirebaseService {
       'pendapatan_bersih',
       'bagian_capster',
       'bagian_pondok',
+      'total_kasbon',
+      'sisa_diterima_capster',
+    ],
+    'kasbon': [
+      'id_kasbon',
+      'tanggal',
+      'id_capster',
+      'nama_capster',
+      'nominal',
+      'keterangan',
     ],
     'rekap_customer': [
       'id_rekap',
@@ -330,18 +341,27 @@ class FirebaseService {
       model.cu,
       model.totalCustomer,
     ]);
+    await _syncKasPondok(DateFormatter.toStorageMonth(model.tanggal));
   }
 
   Future<void> deletePendapatanHarian(PendapatanHarianModel model) async {
     await _deleteById('pendapatan_harian', model.idPendapatan);
     await _deleteById('rekap_customer', model.idPendapatan);
+    await _syncKasPondok(DateFormatter.toStorageMonth(model.tanggal));
   }
 
   Future<List<BukuKasModel>> getBukuKas() async {
     final rows = await readRows('buku_kas_umum');
-    final data = rows.skip(1).map(BukuKasModel.fromRow).toList();
+    var data = rows.skip(1).map(BukuKasModel.fromRow).toList();
     data.sort((a, b) => '${DateFormatter.toStorageDate(a.tanggal)}_${a.idKas}'
         .compareTo('${DateFormatter.toStorageDate(b.tanggal)}_${b.idKas}'));
+    
+    int runningSaldo = 0;
+    for (var i = 0; i < data.length; i++) {
+      runningSaldo += data[i].penerimaan - data[i].pengeluaran;
+      data[i] = data[i].copyWith(saldo: runningSaldo);
+    }
+    
     return data;
   }
 
@@ -357,8 +377,9 @@ class FirebaseService {
     return _deleteById('buku_kas_umum', idKas);
   }
 
-  Future<void> saveOperasional(OperasionalModel model) {
-    return appendRow('operasional', model.toRow());
+  Future<void> saveOperasional(OperasionalModel model) async {
+    await appendRow('operasional', model.toRow());
+    await _syncKasPondok(DateFormatter.toStorageMonth(model.bulan));
   }
 
   Future<List<OperasionalModel>> getOperasional() async {
@@ -366,8 +387,47 @@ class FirebaseService {
     return rows.skip(1).map(OperasionalModel.fromRow).toList();
   }
 
-  Future<void> deleteOperasional(String idOperasional) {
-    return _deleteById('operasional', idOperasional);
+  Future<void> deleteOperasional(OperasionalModel model) async {
+    await _deleteById('operasional', model.idOperasional);
+    await _syncKasPondok(DateFormatter.toStorageMonth(model.bulan));
+  }
+
+  Future<List<KasbonModel>> getKasbonByMonth(String bulan) async {
+    final monthKey = DateFormatter.toStorageMonth(bulan);
+    final rows = await readRows('kasbon');
+    return rows.skip(1).map(KasbonModel.fromRow).where((item) {
+      return DateFormatter.toStorageDate(item.tanggal).startsWith(monthKey);
+    }).toList();
+  }
+
+  Future<void> saveKasbon(KasbonModel model) async {
+    await appendRow('kasbon', model.toRow());
+
+    // Otomatis catat Kasbon sebagai pengeluaran di Buku Kas
+    final kasModel = BukuKasModel(
+      idKas: 'BK-${model.idKasbon}',
+      tanggal: model.tanggal,
+      uraian: 'Kasbon capster ${model.namaCapster}',
+      akun: 'Kasbon Karyawan',
+      penerimaan: 0,
+      pengeluaran: model.nominal,
+      saldo: 0, // Saldo will be calculated dynamically in getBukuKas
+      keterangan: model.keterangan,
+    );
+    await upsertBukuKas(kasModel);
+
+    await _syncKasPondok(DateFormatter.toStorageMonth(model.tanggal));
+  }
+
+  Future<List<KasbonModel>> getKasbon() async {
+    final rows = await readRows('kasbon');
+    return rows.skip(1).map(KasbonModel.fromRow).toList();
+  }
+
+  Future<void> deleteKasbon(KasbonModel model) async {
+    await _deleteById('kasbon', model.idKasbon);
+    await deleteBukuKas('BK-${model.idKasbon}');
+    await _syncKasPondok(DateFormatter.toStorageMonth(model.tanggal));
   }
 
   Future<List<UserModel>> getUsers() async {
@@ -468,6 +528,55 @@ class FirebaseService {
 
   Future<void> _deleteByDocumentId(String collectionName, String id) async {
     await _firestore!.collection(collectionName).doc(id).delete();
+  }
+
+  Future<void> _syncKasPondok(String bulan) async {
+    final capster = await getCapsterAktif();
+    final pendapatan = await getPendapatanByMonth(bulan);
+    final operasional = await getOperasionalByMonth(bulan);
+    final kasbon = await getKasbonByMonth(bulan);
+    
+    final laporan = CalculationService().generateLaporanBulanan(
+      bulan: bulan,
+      capsterAktif: capster,
+      pendapatan: pendapatan,
+      operasional: operasional,
+      kasbon: kasbon,
+    );
+    
+    final totalBagianPondok = laporan.fold(0, (total, item) => total + item.bagianPondok);
+    final idKas = 'K-PONDOK-$bulan';
+    
+    if (totalBagianPondok <= 0) {
+      await deleteBukuKas(idKas);
+      return;
+    }
+    
+    String tanggalAkhir = DateFormatter.formatDateKey(DateTime.now());
+    final parts = bulan.split('-');
+    if (parts.length == 2) {
+      final year = int.tryParse(parts[0]);
+      final month = int.tryParse(parts[1]);
+      if (year != null && month != null) {
+        tanggalAkhir = DateFormatter.formatDateKey(DateTime(year, month + 1, 0));
+      }
+    }
+    
+    final saldoSebelumnya = await getSaldoSebelumKas(tanggalAkhir, idKas);
+    
+    final kasModel = BukuKasModel(
+      idKas: idKas,
+      tanggal: tanggalAkhir,
+      uraian: 'Pendapatan usaha pondok bulan ${DateFormatter.displayMonth(bulan)}',
+      akun: 'Pendapatan Usaha',
+      penerimaan: totalBagianPondok,
+      pengeluaran: 0,
+      saldo: saldoSebelumnya + totalBagianPondok,
+      keterangan: 'Otomatis dari bagian pondok pada laporan pembagian hasil',
+    );
+    
+    await upsertBukuKas(kasModel);
+    await saveLaporanBulanan(laporan);
   }
 
   String _docIdFor(String collectionName, List<dynamic> row) {
@@ -697,6 +806,7 @@ class FirebaseService {
       ],
     ];
     _dummyCollections['laporan_bulanan'] = [_headers['laporan_bulanan']!];
+    _dummyCollections['kasbon'] = [_headers['kasbon']!];
     _dummyCollections['rekap_customer'] = [_headers['rekap_customer']!];
     _dummyCollections['users'] = [
       _headers['users']!,

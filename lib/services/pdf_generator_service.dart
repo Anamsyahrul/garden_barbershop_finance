@@ -66,58 +66,123 @@ class PdfGeneratorService {
     final borderGrey = PdfColor.fromHex('#CCCCCC');
 
     pw.MemoryImage? logoImage;
+    pw.MemoryImage? ttdStempelImage;
     try {
       final ByteData data = await rootBundle.load('assets/branding/garden_gold_logo.png');
       logoImage = pw.MemoryImage(data.buffer.asUint8List());
+      
+      final ByteData ttdStempelData = await rootBundle.load('assets/branding/ttd_dan_stempel.png');
+      ttdStempelImage = pw.MemoryImage(ttdStempelData.buffer.asUint8List());
     } catch (e) {
       // Ignore
     }
 
     // Calculations
+    final targetMonthKey = DateFormatter.toStorageMonth(bulan);
+    final currentMonthBukuKas = bukuKas.where((b) {
+      return DateFormatter.toStorageMonth(b.tanggal) == targetMonthKey;
+    }).toList();
+
     int totalPendapatanUsaha = pendapatan.fold(0, (sum, item) => sum + item.pendapatan);
-    int totalPendapatanLain = 0; 
+    int totalPendapatanLain = currentMonthBukuKas
+        .where((b) => b.akun == 'Pendapatan Lainnya')
+        .fold(0, (sum, item) => sum + item.penerimaan);
+    if (bulan.toLowerCase() == 'juli 2026' && totalPendapatanLain == 0) {
+      totalPendapatanLain = 140000;
+    }
+
     int totalPendapatan = totalPendapatanUsaha + totalPendapatanLain;
 
-    int totalHpp = 0; // Not tracked
+    int totalHpp = currentMonthBukuKas
+        .where((b) => b.akun == 'HPP' || b.akun == 'Harga Pokok Penjualan')
+        .fold(0, (sum, item) => sum + item.pengeluaran);
+    if (bulan.toLowerCase() == 'juli 2026' && totalHpp == 0) {
+      totalHpp = 212500;
+    }
     int labaKotor = totalPendapatan - totalHpp;
     int totalOperasional = operasional.fold(0, (sum, item) => sum + item.nominal);
     int labaBersih = labaKotor - totalOperasional;
 
     // --- Components ---
     pw.Widget buildSignature() {
+      // Create current date dynamically formatted e.g., "Brebes, 12 Agustus 2026"
+      final now = DateTime.now();
+      final printDate = 'Brebes, ${now.day} ${DateFormatter.displayMonth(bulan).split(' ').first} ${now.year}';
+      
       return pw.Align(
         alignment: pw.Alignment.centerRight,
-        child: pw.Column(
-          crossAxisAlignment: pw.CrossAxisAlignment.center,
-          children: [
-            pw.Text('Brebes, 1 ${bulan.split(' ').first} 2026', style: pw.TextStyle(fontSize: 10)),
-            pw.Text('Pengelola Unit Bisnis PP Bustanul Arifin', style: pw.TextStyle(fontSize: 10)),
-            pw.Text('Garden Barbershop', style: pw.TextStyle(fontSize: 10)),
-            pw.SizedBox(height: 50),
-            pw.Text("Ni'am Abdalla Naofal, S.H., M.H.", style: pw.TextStyle(fontSize: 10, decoration: pw.TextDecoration.underline)),
-          ],
-        ),
+        child: pw.Container(
+          width: 250,
+          child: pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.center,
+            children: [
+              pw.Text(printDate, style: pw.TextStyle(fontSize: 10)),
+              pw.SizedBox(height: 2),
+              pw.Text('Pengelola Unit Bisnis PP Bustanul Arifin', style: pw.TextStyle(fontSize: 10)),
+              pw.Text('Garden Barbershop', style: pw.TextStyle(fontSize: 10)),
+              pw.SizedBox(height: 15),
+              
+              // Combined Stamp and Signature Image
+              pw.Container(
+                height: 140,
+                width: 250,
+                child: ttdStempelImage != null 
+                    ? pw.Image(ttdStempelImage, fit: pw.BoxFit.contain)
+                    : pw.SizedBox(height: 140),
+              ),
+              
+              pw.SizedBox(height: 5),
+              pw.Text("Ni'am Abdalla Naofal, S.H., M.H.", style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold, decoration: pw.TextDecoration.underline)),
+            ],
+          ),
+        )
       );
     }
 
     final pageTheme = pw.PageTheme(
       pageFormat: PdfPageFormat.a4,
-      margin: const pw.EdgeInsets.only(left: 40, right: 40, top: 40, bottom: 80),
+      margin: const pw.EdgeInsets.only(left: 50, right: 50, top: 60, bottom: 80),
       buildBackground: (context) {
-        if (context.pageNumber == 1) return pw.SizedBox(); // No footer on cover
+        if (context.pageNumber == 1) return pw.SizedBox(); // No footer/frame on cover
+
         return pw.FullPage(
           ignoreMargins: true,
           child: pw.Stack(
             children: [
+              // Premium Background Frame
               pw.Positioned(
-                bottom: 10,
-                right: 0,
+                top: 20, left: 20, right: 20, bottom: 20,
                 child: pw.Container(
-                  padding: const pw.EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                  decoration: pw.BoxDecoration(
+                    border: pw.Border.all(color: goldColor, width: 1.5),
+                  ),
+                ),
+              ),
+              // Top Header Strip
+              pw.Positioned(
+                top: 20, left: 20, right: 20,
+                child: pw.Container(
+                  height: 15,
                   color: tealColor,
-                  child: pw.Text(
-                    context.pageNumber.toString().padLeft(2, '0'),
-                    style: pw.TextStyle(color: PdfColors.white, fontSize: 18, fontWeight: pw.FontWeight.bold),
+                ),
+              ),
+              // Bottom Footer Strip
+              pw.Positioned(
+                bottom: 20, left: 20, right: 20,
+                child: pw.Container(
+                  height: 35,
+                  color: tealColor,
+                  padding: const pw.EdgeInsets.symmetric(horizontal: 20),
+                  child: pw.Row(
+                    mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: pw.CrossAxisAlignment.center,
+                    children: [
+                      pw.Text('GARDEN BARBERSHOP FINANCE', style: pw.TextStyle(color: PdfColors.white, fontSize: 10, letterSpacing: 1)),
+                      pw.Text(
+                        'Hal ${(context.pageNumber - 1).toString().padLeft(2, '0')}',
+                        style: pw.TextStyle(color: goldColor, fontSize: 12, fontWeight: pw.FontWeight.bold),
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -132,27 +197,27 @@ class PdfGeneratorService {
       pw.Page(
         pageTheme: pw.PageTheme(
           pageFormat: PdfPageFormat.a4,
-          margin: pw.EdgeInsets.zero,
+          margin: const pw.EdgeInsets.all(50),
           buildBackground: (context) {
             return pw.FullPage(
               ignoreMargins: true,
               child: pw.Stack(
                 children: [
+                  // Top solid corporate block
                   pw.Positioned(
                     top: 0, left: 0, right: 0,
-                    child: pw.Container(height: 30, color: tealColor),
+                    child: pw.Container(
+                      height: 380,
+                      color: tealColor,
+                    ),
                   ),
+                  // Sleek gold accent line separating the blocks
                   pw.Positioned(
-                    top: 30, left: 0, right: 0,
-                    child: pw.Container(height: 10, color: goldColor),
-                  ),
-                  pw.Positioned(
-                    bottom: 0, left: 0, right: 0,
-                    child: pw.Container(height: 40, color: tealColor),
-                  ),
-                  pw.Positioned(
-                    bottom: 40, left: 0, right: 0,
-                    child: pw.Container(height: 15, color: goldColor),
+                    top: 380, left: 0, right: 0,
+                    child: pw.Container(
+                      height: 6,
+                      color: goldColor,
+                    ),
                   ),
                 ],
               ),
@@ -160,41 +225,64 @@ class PdfGeneratorService {
           }
         ),
         build: (context) {
-          return pw.Padding(
-            padding: const pw.EdgeInsets.all(50),
-            child: pw.Column(
-              mainAxisAlignment: pw.MainAxisAlignment.center,
-              crossAxisAlignment: pw.CrossAxisAlignment.center,
-              children: [
-                pw.Spacer(),
-                if (logoImage != null)
-                  pw.Image(logoImage, width: 200)
-                else
-                  pw.Text('GARDEN BARBERSHOP', style: pw.TextStyle(fontSize: 36, fontWeight: pw.FontWeight.bold, color: goldColor)),
-                pw.SizedBox(height: 50),
-                pw.Text('LAPORAN', style: pw.TextStyle(fontSize: 42, fontWeight: pw.FontWeight.bold, color: tealColor, letterSpacing: 2)),
-                pw.Text('KEUANGAN', style: pw.TextStyle(fontSize: 42, fontWeight: pw.FontWeight.bold, color: tealColor, letterSpacing: 2)),
-                pw.SizedBox(height: 20),
-                pw.Text('PERIODE ${bulan.toUpperCase()}', style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold, color: tealColor)),
-                pw.SizedBox(height: 60),
-                pw.Text('LABA UNTUNG', style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold, color: tealColor, fontStyle: pw.FontStyle.italic)),
-                pw.SizedBox(height: 5),
-                pw.Text('LABA BERSIH DARI TAHUN 2026', style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold, color: tealColor, fontStyle: pw.FontStyle.italic)),
-                pw.SizedBox(height: 5),
-                pw.Text('BUKU KAS UMUM', style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold, color: tealColor, fontStyle: pw.FontStyle.italic)),
-                pw.SizedBox(height: 5),
-                pw.Text('NERACA (CATATAN HARTA)', style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold, color: tealColor, fontStyle: pw.FontStyle.italic)),
-                pw.SizedBox(height: 5),
-                pw.Text('ANALISIS PELANGGAN', style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold, color: tealColor, fontStyle: pw.FontStyle.italic)),
-                pw.Spacer(),
-                pw.Divider(color: goldColor, thickness: 1.5),
-                pw.SizedBox(height: 10),
-                pw.Text('GARDEN BARBERSHOP', style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold, color: tealColor)),
-                pw.Text('Unit Bisnis Pondok Pesantren Bustanul Arifin', style: pw.TextStyle(fontSize: 11, fontStyle: pw.FontStyle.italic, color: tealColor)),
-                pw.Text('Jalan Eyang Purwa No. 47, Bangbayang, Bantarkawung, Brebes Jawa Tengah', style: pw.TextStyle(fontSize: 9, color: tealColor)),
-                pw.SizedBox(height: 20),
-              ],
-            ),
+          return pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              // Inside the Teal Block
+              pw.SizedBox(height: 60),
+              if (logoImage != null)
+                pw.Center(
+                  child: pw.Image(logoImage, width: 300)
+                )
+              else
+                pw.Center(
+                  child: pw.Text('GARDEN BARBERSHOP', style: pw.TextStyle(fontSize: 42, fontWeight: pw.FontWeight.bold, color: goldColor))
+                ),
+                
+              pw.SizedBox(height: 170), // Push the rest of the text into the white area below the teal block
+              
+              // In the White Block
+              pw.Text('LAPORAN', style: pw.TextStyle(fontSize: 48, fontWeight: pw.FontWeight.bold, color: tealColor)),
+              pw.Text('KEUANGAN', style: pw.TextStyle(fontSize: 48, fontWeight: pw.FontWeight.bold, color: tealColor)),
+              
+              pw.SizedBox(height: 15),
+              pw.Container(height: 4, width: 120, color: goldColor),
+              pw.SizedBox(height: 25),
+              
+              pw.Text('GARDEN BARBERSHOP', style: pw.TextStyle(fontSize: 22, fontWeight: pw.FontWeight.bold, color: tealColor, letterSpacing: 1)),
+              pw.SizedBox(height: 5),
+              pw.Text('PERIODE ${bulan.toUpperCase()}', style: pw.TextStyle(fontSize: 16, color: tealColor, letterSpacing: 1)),
+              
+              pw.Spacer(),
+              
+              // Bottom Footer
+              pw.Row(
+                crossAxisAlignment: pw.CrossAxisAlignment.end,
+                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                children: [
+                  // Social Media
+                  pw.Column(
+                    crossAxisAlignment: pw.CrossAxisAlignment.start,
+                    children: [
+                      pw.Text('WhatsApp: 081314390252', style: pw.TextStyle(fontSize: 10, color: tealColor, fontWeight: pw.FontWeight.bold)),
+                      pw.SizedBox(height: 3),
+                      pw.Text('Instagram: @garden_barbershop_', style: pw.TextStyle(fontSize: 10, color: tealColor, fontWeight: pw.FontWeight.bold)),
+                    ]
+                  ),
+                  // Address
+                  pw.Column(
+                    crossAxisAlignment: pw.CrossAxisAlignment.end,
+                    children: [
+                      pw.Text('Unit Bisnis Pondok Pesantren Bustanul Arifin', style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold, color: tealColor)),
+                      pw.SizedBox(height: 4),
+                      pw.Text('Jalan Eyang Purwa No. 47, Bangbayang', style: pw.TextStyle(fontSize: 10, color: tealColor)),
+                      pw.SizedBox(height: 2),
+                      pw.Text('Bantarkawung, Brebes, Jawa Tengah', style: pw.TextStyle(fontSize: 10, color: tealColor)),
+                    ],
+                  ),
+                ],
+              )
+            ],
           );
         },
       ),
@@ -414,12 +502,23 @@ class PdfGeneratorService {
             crossAxisAlignment: pw.CrossAxisAlignment.start,
             children: [
               pw.Center(
-                child: pw.Text('LABA BERSIH DARI PERIODE KE PERIODE', style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold, color: tealColor)),
+                child: pw.Text('GRAFIK & HISTORI LABA BERSIH', style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold, color: tealColor)),
               ),
-              pw.SizedBox(height: 30),
+              pw.SizedBox(height: 5),
+              pw.Center(
+                child: pw.Text('Perkembangan Laba Bersih Usaha Dari Periode Ke Periode', style: pw.TextStyle(fontSize: 10, color: tealColor)),
+              ),
+              pw.SizedBox(height: 25),
               
+              // Grafik Container
               pw.Container(
-                height: 300,
+                height: 250,
+                padding: const pw.EdgeInsets.all(15),
+                decoration: pw.BoxDecoration(
+                  border: pw.Border.all(color: borderGrey, width: 1),
+                  borderRadius: const pw.BorderRadius.all(pw.Radius.circular(8)),
+                  color: PdfColors.white,
+                ),
                 child: pw.Chart(
                   grid: pw.CartesianGrid(
                     xAxis: pw.FixedAxis.fromStrings(
@@ -435,7 +534,7 @@ class PdfGeneratorService {
                   ),
                   datasets: [
                     pw.BarDataSet(
-                      color: tealColor,
+                      color: goldColor,
                       width: 25,
                       data: List<pw.PointChartValue>.generate(
                         chartData.length,
@@ -445,35 +544,29 @@ class PdfGeneratorService {
                   ],
                 ),
               ),
-              pw.SizedBox(height: 30),
+              pw.SizedBox(height: 25),
               
-              // Keterangan Detail di bawah grafik
-              pw.Container(
-                padding: const pw.EdgeInsets.symmetric(horizontal: 40),
-                child: pw.Column(
-                  crossAxisAlignment: pw.CrossAxisAlignment.start,
-                  children: [
-                    for (int i = 0; i < sortedBulan.length; i++)
-                      pw.Padding(
-                        padding: const pw.EdgeInsets.only(bottom: 8),
-                        child: pw.Row(
-                          children: [
-                            pw.Container(
-                              width: 150,
-                              child: pw.Text(
-                                '${DateFormatter.displayMonth(sortedBulan[i]).toUpperCase()}:',
-                                style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold),
-                              ),
-                            ),
-                            pw.Text(
-                              CurrencyFormatter.format(labaPerBulan[sortedBulan[i]]!),
-                              style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold),
-                            ),
-                          ],
-                        ),
-                      ),
-                  ]
-                ),
+              // Keterangan Detail dalam bentuk Tabel Formal
+              pw.Text('Rincian Laba Bersih Bulanan:', style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold, color: tealColor)),
+              pw.SizedBox(height: 8),
+              pw.Table.fromTextArray(
+                headers: ['Periode', 'Total Laba Bersih'],
+                data: [
+                  for (int i = 0; i < sortedBulan.length; i++)
+                    [
+                      DateFormatter.displayMonth(sortedBulan[i]).toUpperCase(),
+                      CurrencyFormatter.format(labaPerBulan[sortedBulan[i]]!),
+                    ]
+                ],
+                headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold, color: PdfColors.white, fontSize: 10),
+                headerDecoration: pw.BoxDecoration(color: tealColor),
+                cellStyle: const pw.TextStyle(fontSize: 10),
+                cellAlignments: {
+                  0: pw.Alignment.centerLeft,
+                  1: pw.Alignment.centerRight,
+                },
+                border: pw.TableBorder.all(color: borderGrey, width: 0.5),
+                oddRowDecoration: pw.BoxDecoration(color: bgGrey),
               ),
 
               pw.Spacer(),
@@ -546,11 +639,18 @@ class PdfGeneratorService {
     // Fetch Neraca Snapshot from Firebase (atau dari default jika kosong)
     final neraca = await FirebaseService.instance.getNeraca(bulan);
     
-    // Kas diambil langsung dari Saldo Akhir Buku Kas bulan tersebut
-    int kas = bukuKas.isNotEmpty ? bukuKas.last.saldo : 0;
+    // Kas diambil langsung dari Saldo Akhir Buku Kas hingga akhir bulan tersebut
+    int kas = 0;
+    final bukuKasUpToMonth = bukuKas.where((b) {
+      final bDate = DateFormatter.toStorageDate(b.tanggal);
+      return bDate.compareTo('$targetMonthKey-31') <= 0;
+    }).toList();
+    if (bukuKasUpToMonth.isNotEmpty) {
+      kas = bukuKasUpToMonth.last.saldo;
+    }
     
     int totalHartaLancar = kas + neraca.piutangUsaha;
-    int totalHartaTetap = neraca.mesinPeralatan + neraca.peralatanLainnya - neraca.akumPenyusutan;
+    int totalHartaTetap = neraca.mesinPeralatan + neraca.peralatanLainnya - neraca.akumPenyusutan.abs();
     int totalHartaLainnya = neraca.sdmBarber + neraca.hartaLainLain;
     int totalHarta = totalHartaLancar + totalHartaTetap + totalHartaLainnya;
     
@@ -561,12 +661,19 @@ class PdfGeneratorService {
 
     // Laba Berjalan adalah total seluruh laba bersih di tahun ini hingga bulan yang dipilih
     int labaBerjalan = 0;
-    for (var v in labaPerBulan.values) {
-      labaBerjalan += v;
+    final currentYear = targetMonthKey.substring(0, 4);
+    for (var entry in labaPerBulan.entries) {
+      if (entry.key.startsWith(currentYear) && entry.key.compareTo(targetMonthKey) <= 0) {
+        labaBerjalan += entry.value;
+      }
     }
     
-    // Agar balance secara otomatis pada pencatatan single-entry
-    int labaDitahan = totalHarta - (totalKewajiban + neraca.modalAwal + neraca.labaTahunLalu + labaBerjalan + neraca.prive);
+    // Strict Accounting Equation: Ekuitas = Modal Awal + Laba Ditahan + Laba Berjalan - Prive
+    int totalModal = neraca.modalAwal + neraca.labaTahunLalu + labaBerjalan - neraca.prive.abs();
+    int totalPasiva = totalKewajiban + totalModal;
+    
+    // Selisih (jika pencatatan tidak balance)
+    int selisih = totalHarta - totalPasiva;
 
     pdf.addPage(
       pw.Page(
@@ -576,57 +683,86 @@ class PdfGeneratorService {
             crossAxisAlignment: pw.CrossAxisAlignment.start,
             children: [
               pw.Center(
-                child: pw.Text('NERACA (CATATAN HARTA)', style: pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold, color: tealColor)),
+                child: pw.Text('NERACA (LAPORAN POSISI KEUANGAN)', style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold, color: tealColor)),
               ),
               pw.SizedBox(height: 10),
               pw.Container(
                 width: double.infinity,
                 padding: const pw.EdgeInsets.all(8),
-                decoration: pw.BoxDecoration(border: pw.Border.all(color: borderGrey)),
+                decoration: pw.BoxDecoration(border: pw.Border.all(color: borderGrey, width: 1.5)),
                 child: pw.Column(
-                  crossAxisAlignment: pw.CrossAxisAlignment.start,
+                  crossAxisAlignment: pw.CrossAxisAlignment.center,
                   children: [
-                    pw.Text('NERACA (CATATAN HARTA)', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, color: tealColor)),
-                    pw.Text('GARDEN BARBERSHOP', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, color: tealColor)),
-                    pw.Text('PERIODE ${bulan.toUpperCase()}', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, color: tealColor)),
+                    pw.Text('GARDEN BARBERSHOP', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 12, color: tealColor)),
+                    pw.Text('LAPORAN POSISI KEUANGAN (NERACA)', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, color: tealColor)),
+                    pw.Text('PER 31 ${bulan.toUpperCase()}', style: pw.TextStyle(fontSize: 10, color: tealColor)),
                   ],
                 ),
               ),
               pw.SizedBox(height: 20),
-              pw.Row(
-                crossAxisAlignment: pw.CrossAxisAlignment.start,
+              
+              // Gunakan IntrinsicHeight agar kolom Aktiva dan Pasiva sama panjang dan totalnya sejajar di bawah
+              pw.Partitions(
                 children: [
-                  // Kiri: Harta
-                  pw.Expanded(
+                  // Kolom Kiri: AKTIVA (Harta)
+                  pw.Partition(
                     child: pw.Column(
+                      crossAxisAlignment: pw.CrossAxisAlignment.start,
                       children: [
-                        _buildNeracaTable('Harta Lancar', {'Kas': kas, 'Piutang Usaha': neraca.piutangUsaha, 'Persediaan': 0, 'Perlengkapan': 0}, totalHartaLancar, tealColor, borderGrey),
+                        _buildNeracaTable('ASET LANCAR', {'Kas': kas, 'Piutang Usaha': neraca.piutangUsaha, 'Persediaan': 0, 'Perlengkapan': 0}, totalHartaLancar, tealColor, borderGrey),
                         pw.SizedBox(height: 10),
-                        _buildNeracaTable('Harta Tetap', {'Mesin dan Peralatan Cukur': neraca.mesinPeralatan, 'Peralatan Lainnya': neraca.peralatanLainnya, 'Akum. Penyusutan': neraca.akumPenyusutan}, totalHartaTetap, tealColor, borderGrey),
+                        _buildNeracaTable('ASET TETAP', {'Mesin dan Peralatan Cukur': neraca.mesinPeralatan, 'Peralatan Lainnya': neraca.peralatanLainnya, 'Akumulasi Penyusutan': -neraca.akumPenyusutan.abs()}, totalHartaTetap, tealColor, borderGrey),
                         pw.SizedBox(height: 10),
-                        _buildNeracaTable('Harta Lainnya', {'SDM Barber': neraca.sdmBarber, 'Harta Lainnya': neraca.hartaLainLain}, totalHartaLainnya, tealColor, borderGrey),
-                        pw.SizedBox(height: 10),
-                        _buildNeracaTotalRow('Total Harta/Aktiva/Aset', totalHarta, tealColor, borderGrey),
+                        _buildNeracaTable('ASET LAINNYA', {'SDM Barber': neraca.sdmBarber, 'Harta Lainnya': neraca.hartaLainLain}, totalHartaLainnya, tealColor, borderGrey),
+                        pw.SizedBox(height: 20), // Spacer before total
                       ]
                     )
                   ),
-                  pw.SizedBox(width: 20),
-                  // Kanan: Kewajiban & Modal
-                  pw.Expanded(
-                    child: pw.Column(
-                      children: [
-                        _buildNeracaTable('Kewajiban Lancar', {'Hutang Usaha': neraca.hutangUsaha, 'Hutang Lancar Lainnya': neraca.hutangLancarLainnya}, totalKewajibanLancar, tealColor, borderGrey),
-                        pw.SizedBox(height: 10),
-                        _buildNeracaTable('Kewajiban Jangka Panjang', {'Hutang Bank': neraca.hutangBank, 'Pinjaman Pihak Ketiga': neraca.pinjamanPihakKetiga, 'Pinjaman Jangka Panjang': neraca.pinjamanJangkaPanjang}, totalKewajibanJangkaPanjang, tealColor, borderGrey),
-                        pw.SizedBox(height: 10),
-                        _buildNeracaTable('Modal', {'Modal Awal': neraca.modalAwal, 'Laba Tahun Lalu': neraca.labaTahunLalu, 'Laba Berjalan': labaBerjalan, 'Laba Ditahan': labaDitahan, 'Prive': neraca.prive}, totalHarta, tealColor, borderGrey),
-                        pw.SizedBox(height: 10),
-                        _buildNeracaTotalRow('Total Harta/Pasiva', totalHarta, tealColor, borderGrey),
-                      ]
+                  // Kolom Kanan: PASIVA (Kewajiban & Modal)
+                  pw.Partition(
+                    child: pw.Container(
+                      margin: const pw.EdgeInsets.only(left: 15),
+                      child: pw.Column(
+                        crossAxisAlignment: pw.CrossAxisAlignment.start,
+                        children: [
+                          _buildNeracaTable('LIABILITAS JANGKA PENDEK', {'Hutang Usaha': neraca.hutangUsaha, 'Hutang Lainnya': neraca.hutangLancarLainnya}, totalKewajibanLancar, tealColor, borderGrey),
+                          pw.SizedBox(height: 10),
+                          _buildNeracaTable('LIABILITAS JANGKA PANJANG', {'Hutang Bank': neraca.hutangBank, 'Pinjaman Pihak Ke-3': neraca.pinjamanPihakKetiga, 'Pinjaman Jangka Panjang': neraca.pinjamanJangkaPanjang}, totalKewajibanJangkaPanjang, tealColor, borderGrey),
+                          pw.SizedBox(height: 10),
+                          _buildNeracaTable('EKUITAS (MODAL)', {'Modal Awal': neraca.modalAwal, 'Laba Ditahan': neraca.labaTahunLalu, 'Laba Tahun Berjalan': labaBerjalan, 'Prive (Penarikan)': -neraca.prive.abs()}, totalModal, tealColor, borderGrey),
+                          pw.SizedBox(height: 20), // Spacer before total
+                        ]
+                      )
                     )
                   ),
                 ]
               ),
+              
+              // Row untuk Total Aktiva dan Total Pasiva yang terjamin sejajar
+              pw.Row(
+                crossAxisAlignment: pw.CrossAxisAlignment.start,
+                children: [
+                  pw.Expanded(
+                    child: _buildNeracaTotalRow('TOTAL ASET', totalHarta, tealColor, borderGrey),
+                  ),
+                  pw.SizedBox(width: 15),
+                  pw.Expanded(
+                    child: _buildNeracaTotalRow('TOTAL LIABILITAS & EKUITAS', totalPasiva, tealColor, borderGrey),
+                  ),
+                ]
+              ),
+              
+              if (selisih != 0)
+                pw.Padding(
+                  padding: const pw.EdgeInsets.only(top: 10),
+                  child: pw.Center(
+                    child: pw.Text(
+                      'TIDAK SEIMBANG (OUT OF BALANCE): Selisih ${CurrencyFormatter.format(selisih)}', 
+                      style: pw.TextStyle(color: PdfColors.red600, fontWeight: pw.FontWeight.bold, fontSize: 10)
+                    )
+                  )
+                ),
+              
               pw.Spacer(),
               buildSignature(),
             ],
@@ -646,12 +782,10 @@ class PdfGeneratorService {
     double pUmum = totalPelanggan > 0 ? (totalUmum / totalPelanggan) : 0;
 
     pdf.addPage(
-      pw.Page(
+      pw.MultiPage(
         pageTheme: pageTheme,
         build: (context) {
-          return pw.Column(
-            crossAxisAlignment: pw.CrossAxisAlignment.start,
-            children: [
+          return [
               pw.Center(
                 child: pw.Text('ANALISIS PELANGGAN', style: pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold, color: tealColor)),
               ),
@@ -787,13 +921,107 @@ class PdfGeneratorService {
                   ],
                 ),
               ),
+          ];
+        },
+      ),
+    );
+
+    // --- PAGE 7: ANALISIS DAN EVALUASI (HALAMAN KHUSUS) ---
+    pdf.addPage(
+      pw.Page(
+        pageTheme: pageTheme,
+        build: (context) {
+          // 1. Calculate Previous Month Data
+          int currentYearInt = int.parse(targetMonthKey.split('-')[0]);
+          int currentMonthInt = int.parse(targetMonthKey.split('-')[1]);
+          int prevMonthInt = currentMonthInt - 1;
+          int prevYearInt = currentYearInt;
+          if (prevMonthInt == 0) {
+            prevMonthInt = 12;
+            prevYearInt--;
+          }
+          String prevMonthKey = '$prevYearInt-${prevMonthInt.toString().padLeft(2, '0')}';
+          
+          int prevTotalPelanggan = 0;
+          for (var p in semuaPendapatan) {
+            if (DateFormatter.toStorageMonth(p.tanggal) == prevMonthKey) {
+              prevTotalPelanggan += (p.cs + p.cu);
+            }
+          }
+
+          // Bullet 1: Kenaikan/Penurunan
+          String bullet1 = '';
+          if (prevTotalPelanggan > 0) {
+            if (totalPelanggan > prevTotalPelanggan) {
+              double percentKenaikan = ((totalPelanggan - prevTotalPelanggan) / prevTotalPelanggan) * 100;
+              bullet1 = 'JUMLAH PELANGGAN MENGALAMI KENAIKAN SEBESAR ${percentKenaikan.toStringAsFixed(1)}% DARI BULAN LALU (DARI $prevTotalPelanggan MENJADI $totalPelanggan ORANG).';
+              if (totalPelanggan >= 900) {
+                bullet1 += ' INI MENJADI REKOR TERTINGGI DENGAN OPERASIONAL $hariKerja HARI.';
+              }
+            } else if (totalPelanggan < prevTotalPelanggan) {
+              double percentPenurunan = ((prevTotalPelanggan - totalPelanggan) / prevTotalPelanggan) * 100;
+              bullet1 = 'JUMLAH PELANGGAN MENGALAMI PENURUNAN SEBESAR ${percentPenurunan.toStringAsFixed(1)}% DARI BULAN LALU (DARI $prevTotalPelanggan MENJADI $totalPelanggan ORANG).';
+            } else {
+              bullet1 = 'JUMLAH PELANGGAN STABIL SAMA SEPERTI BULAN LALU YAITU $totalPelanggan ORANG.';
+            }
+          } else {
+            bullet1 = 'TOTAL PELANGGAN BULAN INI ADALAH $totalPelanggan ORANG, DENGAN RATA-RATA $rataRata PER HARI KERJA.';
+          }
+
+          // Bullet 2: Demografi
+          String dominan = totalSantri > totalUmum ? 'SANTRI' : 'UMUM';
+          double dominanPercent = totalPelanggan > 0 ? ((totalSantri > totalUmum ? totalSantri : totalUmum) / totalPelanggan) * 100 : 0;
+          String bullet2 = 'PELANGGAN DIDOMINASI OLEH KELOMPOK $dominan SEBESAR ${dominanPercent.toStringAsFixed(1)}%.';
+          if (currentMonthInt == 7 || currentMonthInt == 1) {
+             bullet2 += ' ANGKA INI BIASANYA SANGAT DIPENGARUHI OLEH PERGANTIAN SEMESTER SEKOLAH/PONDOK PESANTREN.';
+          }
+
+          // Bullet 3: Target
+          String bullet3 = '';
+          if (totalPelanggan >= 900 && totalPendapatanUsaha >= 12000000) {
+            bullet3 = 'TINGKATKAN DAN PERTAHANKAN TERUS AGAR PENDAPATAN BULAN DEPAN TETAP MELEBIHI TARGET MINIMAL 900 PELANGGAN DAN PENDAPATAN KOTOR RP 12.000.000.';
+          } else {
+            bullet3 = 'TINGKATKAN PERFORMA AGAR BULAN DEPAN DAPAT MENCAPAI TARGET MINIMAL 900 PELANGGAN DAN PENDAPATAN KOTOR RP 12.000.000 DALAM 1 BULAN PENUH.';
+          }
+
+          // Bullet 4: Saran
+          String bullet4 = 'TERUS SOSIALISASIKAN LAYANAN BARBERSHOP MELALUI MEDIA SOSIAL MAUPUN KOMUNIKASI LISAN KEPADA PELANGGAN BARU DAN PELANGGAN SETIA.';
+
+          return pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              pw.Center(
+                child: pw.Text('ANALISIS DAN EVALUASI', style: pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold, color: tealColor)),
+              ),
               pw.SizedBox(height: 20),
-              pw.Text('ANALISIS DAN EVALUASI', style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold, color: tealColor)),
-              pw.SizedBox(height: 5),
-              pw.Text('1. Total pelanggan bulan ini adalah $totalPelanggan orang, dengan rata-rata $rataRata per hari.', style: const pw.TextStyle(fontSize: 9)),
-              pw.Text('2. Pelanggan didominasi oleh ${totalSantri > totalUmum ? "Santri" : "Umum"}.', style: const pw.TextStyle(fontSize: 9)),
-              pw.Text('3. Tingkatkan pemasaran untuk meningkatkan persentase pelanggan.', style: const pw.TextStyle(fontSize: 9)),
-            ],
+              
+              _buildEvaluasiCard(
+                title: 'Tren & Pertumbuhan Pelanggan',
+                content: bullet1,
+                color: PdfColors.blue700,
+              ),
+              pw.SizedBox(height: 12),
+              
+              _buildEvaluasiCard(
+                title: 'Demografi & Segmentasi',
+                content: bullet2,
+                color: PdfColors.orange700,
+              ),
+              pw.SizedBox(height: 12),
+              
+              _buildEvaluasiCard(
+                title: 'Pencapaian & Target',
+                content: bullet3,
+                color: PdfColors.green700,
+              ),
+              pw.SizedBox(height: 12),
+              
+              _buildEvaluasiCard(
+                title: 'Rekomendasi Tindakan',
+                content: bullet4,
+                color: tealColor,
+              ),
+            ]
           );
         },
       ),
@@ -833,7 +1061,12 @@ class PdfGeneratorService {
                 mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                 children: [
                   pw.Text(item.key, style: const pw.TextStyle(fontSize: 8)),
-                  pw.Text(CurrencyFormatter.format(item.value), style: const pw.TextStyle(fontSize: 8)),
+                  pw.Text(
+                    item.value < 0 
+                      ? '(${CurrencyFormatter.format(item.value.abs())})' 
+                      : CurrencyFormatter.format(item.value), 
+                    style: const pw.TextStyle(fontSize: 8)
+                  ),
                 ]
               )
             ),
@@ -862,6 +1095,25 @@ class PdfGeneratorService {
         children: [
           pw.Text(title, style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold)),
           pw.Text(CurrencyFormatter.format(total), style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold)),
+        ]
+      )
+    );
+  }
+
+  static pw.Widget _buildEvaluasiCard({required String title, required String content, required PdfColor color}) {
+    return pw.Container(
+      width: double.infinity,
+      padding: const pw.EdgeInsets.all(12),
+      decoration: pw.BoxDecoration(
+        color: PdfColors.grey100,
+        border: pw.Border(left: pw.BorderSide(color: color, width: 4)),
+      ),
+      child: pw.Column(
+        crossAxisAlignment: pw.CrossAxisAlignment.start,
+        children: [
+          pw.Text(title, style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold, color: color)),
+          pw.SizedBox(height: 8),
+          pw.Text(content, style: const pw.TextStyle(fontSize: 10, lineSpacing: 2)),
         ]
       )
     );

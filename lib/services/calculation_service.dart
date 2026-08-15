@@ -1,4 +1,5 @@
 import '../models/capster_model.dart';
+import '../models/kasbon_model.dart';
 import '../models/laporan_bulanan_model.dart';
 import '../models/layanan_model.dart';
 import '../models/operasional_model.dart';
@@ -57,6 +58,7 @@ class CalculationService {
     required List<CapsterModel> capsterAktif,
     required List<PendapatanHarianModel> pendapatan,
     required List<OperasionalModel> operasional,
+    List<KasbonModel> kasbon = const [],
   }) {
     final totalOperasional = hitungTotalOperasional(operasional);
     final operasionalPerCapster = hitungOperasionalPerCapster(
@@ -72,6 +74,15 @@ class CalculationService {
         pendapatanKotor,
         operasionalPerCapster,
       );
+      final bagianCapster = hitungBagianCapster(pendapatanBersih);
+      final bagianPondok = hitungBagianPondok(pendapatanBersih);
+      
+      final totalKasbon = kasbon
+          .where((k) => k.idCapster == capster.idCapster)
+          .fold(0, (sum, item) => sum + item.nominal);
+      
+      final sisaDiterimaCapster = bagianCapster - totalKasbon;
+
       return LaporanBulananModel(
         bulan: bulan,
         idCapster: capster.idCapster,
@@ -80,8 +91,10 @@ class CalculationService {
         totalOperasional: totalOperasional,
         operasionalPerCapster: operasionalPerCapster,
         pendapatanBersih: pendapatanBersih,
-        bagianCapster: hitungBagianCapster(pendapatanBersih),
-        bagianPondok: hitungBagianPondok(pendapatanBersih),
+        bagianCapster: bagianCapster,
+        bagianPondok: bagianPondok,
+        totalKasbon: totalKasbon,
+        sisaDiterimaCapster: sisaDiterimaCapster,
       );
     }).toList();
   }

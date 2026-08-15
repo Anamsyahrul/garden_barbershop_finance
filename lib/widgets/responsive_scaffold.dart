@@ -84,7 +84,7 @@ class _SideNavigation extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
                   children: [
                     _BrandMark(size: 48),
-                    const SizedBox(height: 12),
+                    const SizedBox(width: 14),
                     const Text(
                       'Garden Barbershop',
                       style: TextStyle(
@@ -185,25 +185,11 @@ class _BrandMark extends StatelessWidget {
   Widget build(BuildContext context) {
     return Align(
       alignment: Alignment.centerLeft,
-      child: Container(
-        width: size,
-        height: size,
-        decoration: BoxDecoration(
-          gradient: AppColors.primaryGradient,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: AppTheme.softShadow,
-        ),
-        child: const Center(
-          child: Text(
-            'G',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 24,
-              fontWeight: FontWeight.w900,
-              height: 1.1,
-            ),
-          ),
-        ),
+      child: Image.asset(
+        'assets/branding/garden_white_logo.png',
+        width: size * 2.8,
+        height: size * 1.5,
+        fit: BoxFit.contain,
       ),
     );
   }

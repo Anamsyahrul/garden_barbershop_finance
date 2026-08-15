@@ -19,6 +19,28 @@ class BukuKasModel {
   final int saldo;
   final String keterangan;
 
+  BukuKasModel copyWith({
+    String? idKas,
+    String? tanggal,
+    String? uraian,
+    String? akun,
+    int? penerimaan,
+    int? pengeluaran,
+    int? saldo,
+    String? keterangan,
+  }) {
+    return BukuKasModel(
+      idKas: idKas ?? this.idKas,
+      tanggal: tanggal ?? this.tanggal,
+      uraian: uraian ?? this.uraian,
+      akun: akun ?? this.akun,
+      penerimaan: penerimaan ?? this.penerimaan,
+      pengeluaran: pengeluaran ?? this.pengeluaran,
+      saldo: saldo ?? this.saldo,
+      keterangan: keterangan ?? this.keterangan,
+    );
+  }
+
   factory BukuKasModel.fromRow(List<dynamic> row) {
     return BukuKasModel(
       idKas: row.isNotEmpty ? row[0].toString() : '',

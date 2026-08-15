@@ -4,6 +4,7 @@ import '../models/neraca_model.dart';
 import '../services/firebase_service.dart';
 import '../theme/app_theme.dart';
 import '../utils/currency_formatter.dart';
+import '../utils/date_formatter.dart';
 import '../utils/rupiah_input_formatter.dart';
 import '../widgets/app_page_widgets.dart';
 import '../widgets/custom_text_field.dart';
@@ -99,8 +100,9 @@ class _NeracaScreenState extends State<NeracaScreen> {
     if (!_formKey.currentState!.validate()) return;
     LoadingDialog.show(context);
     try {
+      final String storageMonth = DateFormatter.toStorageMonth(_bulan.text);
       final model = NeracaModel(
-        idNeraca: '', // Di-generate di FirebaseService
+        idNeraca: 'NRC-$storageMonth',
         bulan: _bulan.text,
         piutangUsaha: CurrencyFormatter.parse(_piutangUsaha.text),
         mesinPeralatan: CurrencyFormatter.parse(_mesinPeralatan.text),
@@ -136,16 +138,27 @@ class _NeracaScreenState extends State<NeracaScreen> {
     }
   }
 
-  Widget _buildSectionTitle(String title) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 16),
-      child: Text(
-        title,
-        style: const TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.bold,
-          color: AppColors.teal,
+  Widget _buildAccordion(String title, List<Widget> children, {bool initiallyExpanded = false}) {
+    return Card(
+      elevation: 0,
+      margin: const EdgeInsets.only(bottom: 14),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: Colors.grey.withValues(alpha: 0.2)),
+      ),
+      child: ExpansionTile(
+        title: Text(
+          title,
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: AppColors.teal,
+          ),
         ),
+        initiallyExpanded: initiallyExpanded,
+        childrenPadding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+        shape: const Border(), // Remove borders on expanded
+        children: children,
       ),
     );
   }
@@ -167,116 +180,90 @@ class _NeracaScreenState extends State<NeracaScreen> {
     return ResponsiveScaffold(
       currentRoute: NeracaScreen.routeName,
       appBar: AppBar(title: const Text('Manajemen Catatan Harta')),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _simpan,
+        icon: const Icon(Icons.save_outlined),
+        label: const Text('Simpan'),
+      ),
       body: CustomScrollView(
         slivers: [
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Container(
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Pilih Bulan Laporan',
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                            color: AppColors.charcoalSoft,
+                            fontWeight: FontWeight.w600,
+                          ),
                     ),
-                  ],
-                ),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Pilih Bulan Laporan',
-                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                              color: AppColors.charcoalSoft,
-                              fontWeight: FontWeight.w600,
-                            ),
-                      ),
-                      const SizedBox(height: 8),
-                      DropdownButtonFormField<String>(
-                        value: _bulan.text,
-                        items: _bulanOptions.map((b) {
-                          return DropdownMenuItem(value: b, child: Text(b));
-                        }).toList(),
-                        onChanged: (val) {
-                          if (val != null) {
-                            setState(() {
-                              _bulan.text = val;
-                            });
-                            _fetchNeraca();
-                          }
-                        },
-                        decoration: InputDecoration(
-                          filled: true,
-                          fillColor: Colors.grey[200],
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide.none,
-                          ),
-                          contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 14),
+                    const SizedBox(height: 8),
+                    DropdownButtonFormField<String>(
+                      value: _bulan.text,
+                      items: _bulanOptions.map((b) {
+                        return DropdownMenuItem(value: b, child: Text(b));
+                      }).toList(),
+                      onChanged: (val) {
+                        if (val != null) {
+                          setState(() {
+                            _bulan.text = val;
+                          });
+                          _fetchNeraca();
+                        }
+                      },
+                      decoration: InputDecoration(
+                        filled: true,
+                        fillColor: Colors.white,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: Colors.grey[200]!),
                         ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: Colors.grey[200]!),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                       ),
-                      const SizedBox(height: 16),
-                      const Text(
-                        'Ubah angka di bawah ini untuk menyesuaikan saldo akhir harta, kewajiban, dan modal pada bulan terpilih.',
-                        style: TextStyle(fontSize: 13, color: Colors.grey),
-                      ),
-                      
-                      _buildSectionTitle('Harta Tetap & Lancar'),
+                    ),
+                    const SizedBox(height: 16),
+                    const Text(
+                      'Sesuaikan saldo akhir untuk Harta, Kewajiban, dan Modal.',
+                      style: TextStyle(fontSize: 12, color: Colors.grey),
+                    ),
+                    const SizedBox(height: 16),
+                    
+                    _buildAccordion('Harta Tetap & Lancar', [
                       _buildTextField('Piutang Usaha', _piutangUsaha),
-                      _buildTextField('Mesin & Peralatan Cukur', _mesinPeralatan),
-                      _buildTextField('Peralatan Lainnya', _peralatanLainnya),
-                      _buildTextField('SDM Barber', _sdmBarber),
-                      _buildTextField('Harta Lain-lain', _hartaLainLain),
-                      _buildTextField('Akumulasi Penyusutan', _akumPenyusutan),
+                        _buildTextField('Mesin & Peralatan Cukur', _mesinPeralatan),
+                        _buildTextField('Peralatan Lainnya', _peralatanLainnya),
+                        _buildTextField('SDM Barber', _sdmBarber),
+                        _buildTextField('Harta Lain-lain', _hartaLainLain),
+                        _buildTextField('Akumulasi Penyusutan', _akumPenyusutan),
+                      ], initiallyExpanded: true),
 
-                      _buildSectionTitle('Kewajiban (Hutang)'),
-                      _buildTextField('Hutang Usaha', _hutangUsaha),
-                      _buildTextField('Hutang Lancar Lainnya', _hutangLancarLainnya),
-                      _buildTextField('Hutang Bank', _hutangBank),
-                      _buildTextField('Pinjaman Pihak Ketiga', _pinjamanPihakKetiga),
-                      _buildTextField('Pinjaman Jangka Panjang', _pinjamanJangkaPanjang),
+                      _buildAccordion('Kewajiban (Hutang)', [
+                        _buildTextField('Hutang Usaha', _hutangUsaha),
+                        _buildTextField('Hutang Lancar Lainnya', _hutangLancarLainnya),
+                        _buildTextField('Hutang Bank', _hutangBank),
+                        _buildTextField('Pinjaman Pihak Ketiga', _pinjamanPihakKetiga),
+                        _buildTextField('Pinjaman Jangka Panjang', _pinjamanJangkaPanjang),
+                      ]),
 
-                      _buildSectionTitle('Modal'),
-                      _buildTextField('Modal Awal', _modalAwal),
-                      _buildTextField('Laba Tahun Lalu (2025)', _labaTahunLalu),
-                      _buildTextField('Prive', _prive),
-
-                      const SizedBox(height: 24),
-                      SizedBox(
-                        width: double.infinity,
-                        height: 52,
-                        child: ElevatedButton(
-                          onPressed: _simpan,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.teal,
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                          ),
-                          child: const Text(
-                            'Simpan Catatan Harta',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 0.5,
-                            ),
-                          ),
-                        ),
-                      ),
+                      _buildAccordion('Modal', [
+                        _buildTextField('Modal Awal', _modalAwal),
+                        _buildTextField('Laba Tahun Lalu (2025)', _labaTahunLalu),
+                        _buildTextField('Prive', _prive),
+                      ]),
                     ],
                   ),
                 ),
               ),
             ),
-          ),
         ],
       ),
     );

@@ -81,8 +81,8 @@ class NeracaModel {
     return NeracaModel(
       idNeraca: 'NRC-$currentBulan',
       bulan: currentBulan,
-      piutangUsaha: 15000000,
-      mesinPeralatan: 33321889,
+      piutangUsaha: 1700000,
+      mesinPeralatan: 39371889,
       peralatanLainnya: 1054983,
       sdmBarber: 16140609,
       hartaLainLain: 50000,
@@ -93,7 +93,7 @@ class NeracaModel {
       pinjamanPihakKetiga: 0,
       pinjamanJangkaPanjang: 0,
       modalAwal: 43221000,
-      labaTahunLalu: 42010211,
+      labaTahunLalu: 42148087,
       prive: -12297450,
     );
   }
