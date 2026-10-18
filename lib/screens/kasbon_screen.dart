@@ -4,6 +4,7 @@ import 'package:uuid/uuid.dart';
 import '../models/capster_model.dart';
 import '../models/kasbon_model.dart';
 import '../services/firebase_service.dart';
+import '../services/auth_service.dart';
 import '../theme/app_theme.dart';
 import '../utils/currency_formatter.dart';
 import '../utils/date_formatter.dart';
@@ -118,6 +119,9 @@ class _KasbonScreenState extends State<KasbonScreen> {
     
     LoadingDialog.show(context);
     try {
+      final user = await AuthService().currentUser();
+      final status = (user?.role == UserRole.capster) ? 'pending' : 'approved';
+      
       final model = KasbonModel(
         idKasbon: 'K${Uuid().v4().substring(0, 8)}',
         tanggal: DateFormatter.toStorageDate(_tanggal.text),
@@ -125,11 +129,12 @@ class _KasbonScreenState extends State<KasbonScreen> {
         namaCapster: capster.namaCapster,
         nominal: CurrencyFormatter.parse(_nominal.text),
         keterangan: _keterangan.text.trim(),
+        status: status,
       );
       await FirebaseService.instance.saveKasbon(model);
       await FirebaseService.instance.addNotification(
-        title: 'Kasbon Dicatat',
-        message: 'Kasbon untuk ${model.namaCapster} sebesar ${CurrencyFormatter.format(model.nominal)} telah dicatat.',
+        title: 'Kasbon ${status == 'approved' ? 'Dicatat' : 'Diajukan'}',
+        message: 'Kasbon untuk ${model.namaCapster} sebesar ${CurrencyFormatter.format(model.nominal)} telah ${status == 'approved' ? 'dicatat' : 'diajukan untuk persetujuan'}.',
         type: 'expense',
       );
       if (!mounted) return;
@@ -172,6 +177,36 @@ class _KasbonScreenState extends State<KasbonScreen> {
       LoadingDialog.hide(context);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Gagal menghapus kasbon: $error')),
+      );
+    }
+  }
+
+  Future<void> _updateStatus(KasbonModel data, String status) async {
+    LoadingDialog.show(context);
+    try {
+      final updatedModel = KasbonModel(
+        idKasbon: data.idKasbon,
+        tanggal: data.tanggal,
+        idCapster: data.idCapster,
+        namaCapster: data.namaCapster,
+        nominal: data.nominal,
+        keterangan: data.keterangan,
+        status: status,
+      );
+      await FirebaseService.instance.saveKasbon(updatedModel);
+      
+      if (!mounted) return;
+      LoadingDialog.hide(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Status kasbon diubah menjadi $status')),
+      );
+      await _loadTotal();
+      _refreshList();
+    } catch (error) {
+      if (!mounted) return;
+      LoadingDialog.hide(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Gagal mengubah status kasbon: $error')),
       );
     }
   }
@@ -370,22 +405,89 @@ class _KasbonScreenState extends State<KasbonScreen> {
                   style: const TextStyle(color: AppColors.muted, fontSize: 12),
                 ),
                 const SizedBox(height: 5),
-                Text(
-                  CurrencyFormatter.format(item.nominal),
-                  style: const TextStyle(
-                    color: AppColors.danger,
-                    fontWeight: FontWeight.w900,
-                  ),
+                Row(
+                  children: [
+                    Text(
+                      CurrencyFormatter.format(item.nominal),
+                      style: const TextStyle(
+                        color: AppColors.danger,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    _statusChip(item.status),
+                  ],
                 ),
               ],
             ),
           ),
-          IconButton(
-            tooltip: 'Hapus',
-            onPressed: () => _hapus(item),
-            icon: Icon(Icons.delete_outline, color: Colors.red.shade700),
+          FutureBuilder<AppUser?>(
+            future: AuthService().currentUser(),
+            builder: (context, snapshot) {
+              final user = snapshot.data;
+              final canApprove = user?.role == UserRole.admin || user?.role == UserRole.pemilik;
+              
+              return Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (canApprove && item.status == 'pending') ...[
+                    IconButton(
+                      tooltip: 'Setujui',
+                      onPressed: () => _updateStatus(item, 'approved'),
+                      icon: const Icon(Icons.check_circle_outline, color: AppColors.teal),
+                    ),
+                    IconButton(
+                      tooltip: 'Tolak',
+                      onPressed: () => _updateStatus(item, 'rejected'),
+                      icon: Icon(Icons.cancel_outlined, color: AppColors.danger),
+                    ),
+                  ],
+                  IconButton(
+                    tooltip: 'Hapus',
+                    onPressed: () => _hapus(item),
+                    icon: Icon(Icons.delete_outline, color: Colors.red.shade700),
+                  ),
+                ],
+              );
+            },
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _statusChip(String status) {
+    Color color;
+    String label;
+    switch (status) {
+      case 'approved':
+        color = AppColors.teal;
+        label = 'Disetujui';
+        break;
+      case 'rejected':
+        color = AppColors.danger;
+        label = 'Ditolak';
+        break;
+      case 'pending':
+      default:
+        color = AppColors.brass;
+        label = 'Menunggu';
+        break;
+    }
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(color: color.withValues(alpha: 0.5)),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: color,
+          fontSize: 10,
+          fontWeight: FontWeight.w700,
+        ),
       ),
     );
   }

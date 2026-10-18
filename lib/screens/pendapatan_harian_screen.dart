@@ -13,8 +13,9 @@ import '../utils/date_formatter.dart';
 import '../utils/validators.dart';
 import '../widgets/app_page_widgets.dart';
 import '../widgets/responsive_scaffold.dart';
-import '../widgets/app_page_widgets.dart';
 import '../widgets/loading_dialog.dart';
+import '../services/export_service.dart';
+import 'penjualan_produk_tab.dart';
 
 class PendapatanHarianScreen extends StatefulWidget {
   const PendapatanHarianScreen({super.key});
@@ -215,11 +216,76 @@ class _PendapatanHarianScreenState extends State<PendapatanHarianScreen> {
     }
   }
 
+  Future<void> _exportCsv() async {
+    LoadingDialog.show(context);
+    try {
+      final data = await FirebaseService.instance.getPendapatanHarian();
+      final List<List<String>> rows = [
+        ['ID Pendapatan', 'Tanggal', 'Nama Capster', 'Pendapatan', 'Customer Santri', 'Customer Umum', 'Total Customer', ...PendapatanHarianModel.kodeLayanan],
+      ];
+      
+      for (var item in data) {
+        rows.add([
+          item.idPendapatan,
+          DateFormatter.displayDate(item.tanggal),
+          item.namaCapster,
+          item.pendapatan.toString(),
+          item.cs.toString(),
+          item.cu.toString(),
+          item.totalCustomer.toString(),
+          ...PendapatanHarianModel.kodeLayanan.map((kode) => (item.jumlahLayanan[kode] ?? 0).toString()),
+        ]);
+      }
+      
+      if (!mounted) return;
+      LoadingDialog.hide(context);
+      
+      final fileName = 'Pendapatan_Harian_${DateFormatter.formatDate(DateTime.now()).replaceAll(' ', '_')}';
+      await ExportService.exportToCsv(fileName: fileName, data: rows);
+      
+    } catch (error) {
+      if (!mounted) return;
+      LoadingDialog.hide(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Gagal mengekspor CSV: $error')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return ResponsiveScaffold(
-      currentRoute: PendapatanHarianScreen.routeName,
-      appBar: AppBar(title: const Text('Pendapatan Harian')),
+    return DefaultTabController(
+      length: 2,
+      child: ResponsiveScaffold(
+        currentRoute: PendapatanHarianScreen.routeName,
+        appBar: AppBar(
+          title: const Text('Pendapatan Harian'),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.download_rounded),
+              tooltip: 'Export ke Excel (CSV)',
+              onPressed: _exportCsv,
+            ),
+          ],
+          bottom: const TabBar(
+            tabs: [
+              Tab(text: 'Layanan Capster'),
+              Tab(text: 'Penjualan Produk'),
+            ],
+          ),
+        ),
+        body: TabBarView(
+          children: [
+            _buildLayananTab(),
+            const PenjualanProdukTab(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLayananTab() {
+    return Scaffold(
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _simpan,
         icon: const Icon(Icons.save_outlined),
@@ -405,21 +471,129 @@ class _PendapatanHarianScreenState extends State<PendapatanHarianScreen> {
 
   Widget _serviceInput(String kode) {
     final nama = _namaLayanan[kode] ?? kode;
-    return TextFormField(
-      controller: _controllers[kode],
-      keyboardType: TextInputType.number,
-      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-      decoration: InputDecoration(
-        labelText: '$nama ($kode)',
-        hintText: '0',
-        prefixIcon: const Icon(Icons.add_circle_outline, size: 20),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+    final controller = _controllers[kode]!;
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.paper,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.line),
       ),
-      validator: (value) =>
-          Validators.number(value, nama, required: false),
-      onChanged: (_) {
-        _hitungTotal();
-      },
+      child: Row(
+        children: [
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  nama,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.charcoal,
+                    fontSize: 14.5,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  'Kode: $kode',
+                  style: const TextStyle(
+                    color: AppColors.muted,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
+            decoration: const BoxDecoration(
+              border: Border(left: BorderSide(color: AppColors.line)),
+              color: AppColors.panel,
+              borderRadius: BorderRadius.horizontal(right: Radius.circular(15)),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _counterButton(
+                  icon: Icons.remove,
+                  onPressed: () {
+                    final current = _parseNumber(controller.text);
+                    if (current > 0) {
+                      controller.text = (current - 1) == 0 ? '' : (current - 1).toString();
+                      _hitungTotal();
+                    }
+                  },
+                ),
+                SizedBox(
+                  width: 48,
+                  child: TextFormField(
+                    controller: controller,
+                    textAlign: TextAlign.center,
+                    keyboardType: TextInputType.number,
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w900,
+                      fontSize: 17,
+                      color: AppColors.tealDark,
+                    ),
+                    decoration: const InputDecoration(
+                      border: InputBorder.none,
+                      enabledBorder: InputBorder.none,
+                      focusedBorder: InputBorder.none,
+                      errorBorder: InputBorder.none,
+                      disabledBorder: InputBorder.none,
+                      hintText: '0',
+                      hintStyle: TextStyle(color: AppColors.muted),
+                      isDense: true,
+                      contentPadding: EdgeInsets.symmetric(vertical: 8),
+                      filled: true,
+                      fillColor: Colors.transparent,
+                    ),
+                    onChanged: (_) => _hitungTotal(),
+                  ),
+                ),
+                _counterButton(
+                  icon: Icons.add,
+                  onPressed: () {
+                    final current = _parseNumber(controller.text);
+                    controller.text = (current + 1).toString();
+                    _hitungTotal();
+                  },
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _counterButton({required IconData icon, required VoidCallback onPressed}) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onPressed,
+        borderRadius: BorderRadius.circular(10),
+        child: Container(
+          width: 36,
+          height: 36,
+          decoration: BoxDecoration(
+            color: AppColors.paper,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: AppColors.line),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.ink.withValues(alpha: 0.04),
+                blurRadius: 4,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Icon(icon, size: 20, color: AppColors.tealDark),
+        ),
+      ),
     );
   }
 

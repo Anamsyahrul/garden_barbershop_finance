@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../models/cabang_model.dart';
 
 import '../services/calculation_service.dart';
 import '../services/auth_service.dart';
@@ -12,6 +13,7 @@ import '../widgets/notification_bell.dart';
 import '../utils/migration_tool.dart';
 import '../services/migration_service.dart';
 import '../models/capster_model.dart';
+import '../models/absensi_model.dart';
 import '../models/pendapatan_harian_model.dart';
 import '../models/user_role.dart';
 import '../models/user_model.dart';
@@ -49,16 +51,26 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final firebase = FirebaseService.instance;
     final calc = CalculationService();
     final capster = await firebase.getCapsterAktif();
+    final cabangs = await firebase.getSemuaCabang();
+    if (cabangs.isNotEmpty && !cabangs.any((c) => c.idCabang == firebase.activeCabang)) {
+      firebase.setActiveCabang(cabangs.first.idCabang);
+    }
     final pendapatan = await firebase.getPendapatanByMonth(bulan);
     final operasional = await firebase.getOperasionalByMonth(bulan);
     final kasbon = await firebase.getKasbonByMonth(bulan);
+    final bonusDenda = await firebase.getBonusDendaByMonth(bulan);
+    final persentase = await firebase.getPersentaseCapster();
     final laporan = calc.generateLaporanBulanan(
       bulan: bulan,
       capsterAktif: capster,
       pendapatan: pendapatan,
       operasional: operasional,
       kasbon: kasbon,
+      bonusDenda: bonusDenda,
+      persentaseCapster: persentase,
     );
+    final absensiHariIni = await firebase.getAbsensiByDate(DateFormatter.formatDateKey(DateTime.now()));
+
     if ((user?.role == UserRole.capster ||
             user?.role == UserRole.adminHarian) &&
         user!.idCapster.isNotEmpty) {
@@ -79,9 +91,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
         totalBagianPondok:
             ownLaporan.fold(0, (total, item) => total + item.bagianPondok),
         user: user,
+      cabangs: cabangs,
         semuaPendapatan: pendapatan,
         semuaCapster: capster,
         laporanBulanan: ownLaporan,
+        absensiHariIni: absensiHariIni,
       );
     }
     return _DashboardData(
@@ -95,9 +109,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
       totalBagianPondok:
           laporan.fold(0, (total, item) => total + item.bagianPondok),
       user: user,
+      cabangs: cabangs,
       semuaPendapatan: pendapatan,
       semuaCapster: capster,
       laporanBulanan: laporan,
+      absensiHariIni: absensiHariIni,
     );
   }
 
@@ -108,8 +124,38 @@ class _DashboardScreenState extends State<DashboardScreen> {
       extendBody: true,
       appBar: AppBar(
         title: const Text('Dashboard'),
-        actions: const [
-          Padding(
+        actions: [
+          FutureBuilder<_DashboardData>(
+            future: _future,
+            builder: (context, snapshot) {
+              if (!snapshot.hasData) return const SizedBox();
+              final data = snapshot.data!;
+              if (data.user?.role == UserRole.pemilik || data.user?.role == UserRole.admin) {
+                return Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.storefront_rounded),
+                      tooltip: 'Kelola Cabang',
+                      onPressed: () async {
+                        await Navigator.pushNamed(context, '/cabang');
+                        setState(() {
+                          _future = _load();
+                        });
+                      },
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.settings_rounded),
+                      tooltip: 'Pengaturan',
+                      onPressed: () => Navigator.pushNamed(context, '/pengaturan'),
+                    ),
+                  ],
+                );
+              }
+              return const SizedBox();
+            },
+          ),
+          const Padding(
             padding: EdgeInsets.only(right: 10),
             child: NotificationBell(),
           ),
@@ -124,6 +170,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
           child: FutureBuilder<_DashboardData>(
             future: _future,
             builder: (context, snapshot) {
+              if (snapshot.hasError) {
+                return Center(
+                  child: Text('Terjadi Kesalahan:\n${snapshot.error}', textAlign: TextAlign.center, style: const TextStyle(color: Colors.red)),
+                );
+              }
               if (!snapshot.hasData) {
                 return const Center(child: CircularProgressIndicator());
               }
@@ -191,6 +242,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     },
                   ),
                   const SizedBox(height: 20),
+                  if (personalView) _absensiCard(context, data),
+                  if (personalView) const SizedBox(height: 20),
                   _dailyReportSection(context, data),
                   const SizedBox(height: 20),
                   _monthlyReportSection(context, data),
@@ -242,7 +295,172 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
+  Widget _absensiCard(BuildContext context, _DashboardData data) {
+    if (data.user == null || data.user!.idCapster.isEmpty) return const SizedBox();
+    
+    final idCapster = data.user!.idCapster;
+    final absensiList = data.absensiHariIni.where((a) => a.idCapster == idCapster).toList();
+    final today = DateFormatter.formatDateKey(DateTime.now());
+    
+    AbsensiModel? currentAbsensi;
+    if (absensiList.isNotEmpty) {
+      currentAbsensi = absensiList.first;
+    }
+
+    final hasCheckedIn = currentAbsensi != null;
+    final hasCheckedOut = currentAbsensi?.waktuCheckOut != null && currentAbsensi!.waktuCheckOut!.isNotEmpty;
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.paper,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.teal.withOpacity(0.3)),
+        boxShadow: AppTheme.softShadow,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppColors.teal.withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.fingerprint, color: AppColors.teal),
+              ),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Absensi Hari Ini', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                    Text('Jangan lupa check-in saat mulai kerja.', style: TextStyle(color: AppColors.muted, fontSize: 12)),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          if (!hasCheckedIn)
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton.icon(
+                onPressed: () => _prosesCheckIn(data.user!.idCapster, data.user!.name),
+                icon: const Icon(Icons.login),
+                label: const Text('Check In Sekarang'),
+                style: FilledButton.styleFrom(backgroundColor: AppColors.teal),
+              ),
+            )
+          else if (!hasCheckedOut)
+            Row(
+              children: [
+                Expanded(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                    decoration: BoxDecoration(
+                      color: AppColors.teal.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text('Check In: ${currentAbsensi.waktuCheckIn}', 
+                        style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.tealDark)),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () => _prosesCheckOut(currentAbsensi!),
+                    icon: const Icon(Icons.logout),
+                    label: const Text('Check Out'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppColors.danger,
+                      side: const BorderSide(color: AppColors.danger),
+                    ),
+                  ),
+                ),
+              ],
+            )
+          else
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+              decoration: BoxDecoration(
+                color: AppColors.blue.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('✅ Terima kasih sudah bekerja hari ini!', style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.navy)),
+                  const SizedBox(height: 4),
+                  Text('Check In: ${currentAbsensi.waktuCheckIn} • Check Out: ${currentAbsensi.waktuCheckOut}', 
+                      style: const TextStyle(fontSize: 13, color: AppColors.muted)),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _prosesCheckIn(String idCapster, String namaCapster) async {
+    try {
+      final now = DateTime.now();
+      final waktuCheckIn = '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
+      final today = DateFormatter.formatDateKey(now);
+      
+      final model = AbsensiModel(
+        idAbsensi: 'ABS${now.millisecondsSinceEpoch}',
+        tanggal: today,
+        idCapster: idCapster,
+        namaCapster: namaCapster,
+        waktuCheckIn: waktuCheckIn,
+      );
+      
+      await FirebaseService.instance.saveAbsensi(model);
+      setState(() {
+        _future = _load();
+      });
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Berhasil Check-In')));
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Gagal: $e')));
+    }
+  }
+
+  Future<void> _prosesCheckOut(AbsensiModel currentAbsensi) async {
+    try {
+      final now = DateTime.now();
+      final waktuCheckOut = '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
+      
+      final model = AbsensiModel(
+        idAbsensi: currentAbsensi.idAbsensi,
+        tanggal: currentAbsensi.tanggal,
+        idCapster: currentAbsensi.idCapster,
+        namaCapster: currentAbsensi.namaCapster,
+        waktuCheckIn: currentAbsensi.waktuCheckIn,
+        waktuCheckOut: waktuCheckOut,
+        idCabang: currentAbsensi.idCabang,
+      );
+      
+      await FirebaseService.instance.saveAbsensi(model);
+      setState(() {
+        _future = _load();
+      });
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Berhasil Check-Out')));
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Gagal: $e')));
+    }
+  }
+
   Widget _primaryBalance(_DashboardData data) {
+    final activeCabang = data.cabangs.firstWhere(
+      (c) => c.idCabang == FirebaseService.instance.activeCabang,
+      orElse: () => data.cabangs.isNotEmpty ? data.cabangs.first : CabangModel(idCabang: '', namaCabang: 'Utama', alamat: ''),
+    );
+    final isMultiBranch = data.user?.role == UserRole.pemilik || data.user?.role == UserRole.admin;
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -280,18 +498,37 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ),
                   ),
                   const SizedBox(width: 12),
+            
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          'GARDEN FINANCE',
-                          style: TextStyle(
-                            color: Colors.white, 
-                            fontWeight: FontWeight.w900, 
-                            fontSize: 13,
-                            letterSpacing: 1.2,
-                          ),
+                        Row(
+                          children: [
+                            const Text(
+                              'GARDEN FINANCE',
+                              style: TextStyle(
+                                color: Colors.white, 
+                                fontWeight: FontWeight.w900, 
+                                fontSize: 13,
+                                letterSpacing: 1.2,
+                              ),
+                            ),
+                            if (isMultiBranch) ...[
+                              const SizedBox(width: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withValues(alpha: 0.2),
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: Text(
+                                  activeCabang.namaCabang.toUpperCase(),
+                                  style: const TextStyle(color: Colors.white, fontSize: 8, fontWeight: FontWeight.w900, letterSpacing: 0.5),
+                                ),
+                              ),
+                            ]
+                          ],
                         ),
                         const SizedBox(height: 2),
                         Text(
@@ -547,9 +784,11 @@ class _DashboardData {
     required this.totalBagianCapster,
     required this.totalBagianPondok,
     required this.user,
+    required this.cabangs,
     required this.semuaPendapatan,
     required this.semuaCapster,
     required this.laporanBulanan,
+    required this.absensiHariIni,
   });
 
   final int totalPendapatan;
@@ -559,7 +798,9 @@ class _DashboardData {
   final int totalBagianCapster;
   final int totalBagianPondok;
   final AppUser? user;
+  final List<CabangModel> cabangs;
   final List<PendapatanHarianModel> semuaPendapatan;
   final List<CapsterModel> semuaCapster;
   final List<LaporanBulananModel> laporanBulanan;
+  final List<AbsensiModel> absensiHariIni;
 }

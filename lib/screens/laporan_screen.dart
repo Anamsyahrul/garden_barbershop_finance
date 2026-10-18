@@ -15,6 +15,7 @@ import '../widgets/loading_dialog.dart';
 import '../models/operasional_model.dart';
 import '../models/pendapatan_harian_model.dart';
 import '../services/pdf_generator_service.dart';
+import '../services/export_service.dart';
 
 class LaporanScreen extends StatefulWidget {
   const LaporanScreen({super.key});
@@ -58,12 +59,16 @@ class _LaporanScreenState extends State<LaporanScreen> {
       final pendapatan = await firebase.getPendapatanByMonth(bulanKey);
       final operasional = await firebase.getOperasionalByMonth(bulanKey);
       final kasbon = await firebase.getKasbonByMonth(bulanKey);
+      final bonusDenda = await firebase.getBonusDendaByMonth(bulanKey);
+      final persentase = await firebase.getPersentaseCapster();
       var laporan = CalculationService().generateLaporanBulanan(
         bulan: bulanKey,
         capsterAktif: capster,
         pendapatan: pendapatan,
         operasional: operasional,
         kasbon: kasbon,
+        bonusDenda: bonusDenda,
+        persentaseCapster: persentase,
       );
       if (user?.role == UserRole.capster ||
           user?.role == UserRole.adminHarian) {
@@ -111,12 +116,18 @@ class _LaporanScreenState extends State<LaporanScreen> {
       final bukuKas = await firebase.getBukuKas(); // Tampilkan seluruh riwayat
       final semuaLaporan = await firebase.getSemuaLaporanBulanan();
       final semuaPendapatan = await firebase.getPendapatanHarian();
+      final kasbon = await firebase.getKasbonByMonth(bulanKey);
+      final bonusDenda = await firebase.getBonusDendaByMonth(bulanKey);
+      final persentase = await firebase.getPersentaseCapster();
       
       final laporan = CalculationService().generateLaporanBulanan(
         bulan: bulanKey,
         capsterAktif: capster,
         pendapatan: pendapatan,
         operasional: operasional,
+        kasbon: kasbon,
+        bonusDenda: bonusDenda,
+        persentaseCapster: persentase,
       );
 
       await PdfGeneratorService.generateAndPrintLaporan(
@@ -138,6 +149,53 @@ class _LaporanScreenState extends State<LaporanScreen> {
     }
   }
 
+  Future<void> _exportCsv() async {
+    if (_laporan.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Hitung laporan terlebih dahulu')),
+      );
+      return;
+    }
+    
+    LoadingDialog.show(context);
+    try {
+      final List<List<String>> rows = [
+        [
+          'Bulan', 'Nama Capster', 'Pendapatan Kotor', 'Operasional/Capster', 
+          'Pendapatan Bersih', 'Bagian Capster', 'Potongan Kasbon', 
+          'Sisa Diterima', 'Bagian Pondok'
+        ],
+      ];
+      
+      for (var item in _laporan) {
+        rows.add([
+          item.bulan,
+          item.namaCapster,
+          item.pendapatanKotor.toString(),
+          item.operasionalPerCapster.toString(),
+          item.pendapatanBersih.toString(),
+          item.bagianCapster.toString(),
+          item.totalKasbon.toString(),
+          item.sisaDiterimaCapster.toString(),
+          item.bagianPondok.toString(),
+        ]);
+      }
+      
+      if (!mounted) return;
+      LoadingDialog.hide(context);
+      
+      final fileName = 'Laporan_Bulanan_${DateFormatter.toStorageMonth(_bulan.text)}';
+      await ExportService.exportToCsv(fileName: fileName, data: rows);
+      
+    } catch (error) {
+      if (!mounted) return;
+      LoadingDialog.hide(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Gagal mengekspor CSV: $error')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return ResponsiveScaffold(
@@ -145,6 +203,11 @@ class _LaporanScreenState extends State<LaporanScreen> {
       appBar: AppBar(
         title: const Text('Laporan Bulanan'),
         actions: [
+          IconButton(
+            tooltip: 'Export ke Excel (CSV)',
+            onPressed: _loading ? null : _exportCsv,
+            icon: const Icon(Icons.download_rounded),
+          ),
           IconButton(
             tooltip: 'Cetak / Ekspor PDF',
             onPressed: _loading ? null : _exportPdf,

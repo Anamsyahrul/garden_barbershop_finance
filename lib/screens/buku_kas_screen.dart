@@ -12,6 +12,7 @@ import '../widgets/app_page_widgets.dart';
 import '../widgets/responsive_scaffold.dart';
 import '../widgets/custom_text_field.dart';
 import '../widgets/loading_dialog.dart';
+import '../services/export_service.dart';
 
 class BukuKasScreen extends StatefulWidget {
   const BukuKasScreen({super.key});
@@ -167,11 +168,56 @@ class _BukuKasScreenState extends State<BukuKasScreen> {
     }
   }
 
+  Future<void> _exportCsv() async {
+    LoadingDialog.show(context);
+    try {
+      final data = await FirebaseService.instance.getBukuKas();
+      final List<List<String>> rows = [
+        ['ID Kas', 'Tanggal', 'Uraian', 'Akun', 'Penerimaan', 'Pengeluaran', 'Saldo', 'Keterangan'],
+      ];
+      
+      for (var item in data) {
+        rows.add([
+          item.idKas,
+          DateFormatter.displayDate(item.tanggal),
+          item.uraian,
+          item.akun,
+          item.penerimaan.toString(),
+          item.pengeluaran.toString(),
+          item.saldo.toString(),
+          item.keterangan,
+        ]);
+      }
+      
+      if (!mounted) return;
+      LoadingDialog.hide(context);
+      
+      final fileName = 'Buku_Kas_${DateFormatter.formatDate(DateTime.now()).replaceAll(' ', '_')}';
+      await ExportService.exportToCsv(fileName: fileName, data: rows);
+      
+    } catch (error) {
+      if (!mounted) return;
+      LoadingDialog.hide(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Gagal mengekspor CSV: $error')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return ResponsiveScaffold(
       currentRoute: BukuKasScreen.routeName,
-      appBar: AppBar(title: const Text('Buku Kas Umum')),
+      appBar: AppBar(
+        title: const Text('Buku Kas Umum'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.download_rounded),
+            tooltip: 'Export ke Excel (CSV)',
+            onPressed: _exportCsv,
+          ),
+        ],
+      ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _simpan,
         icon: const Icon(Icons.save_outlined),
