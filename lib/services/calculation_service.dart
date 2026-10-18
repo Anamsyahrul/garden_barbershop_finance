@@ -1,5 +1,6 @@
 import '../models/capster_model.dart';
 import '../models/kasbon_model.dart';
+import '../models/bonus_denda_model.dart';
 import '../models/laporan_bulanan_model.dart';
 import '../models/layanan_model.dart';
 import '../models/operasional_model.dart';
@@ -45,12 +46,12 @@ class CalculationService {
     return pendapatanKotor - operasionalPerCapster;
   }
 
-  int hitungBagianCapster(int pendapatanBersih) {
-    return (pendapatanBersih * 0.5).round();
+  int hitungBagianCapster(int pendapatanBersih, double persentaseCapster) {
+    return (pendapatanBersih * persentaseCapster).round();
   }
 
-  int hitungBagianPondok(int pendapatanBersih) {
-    return (pendapatanBersih * 0.5).round();
+  int hitungBagianPondok(int pendapatanBersih, double persentaseCapster) {
+    return (pendapatanBersih * (1.0 - persentaseCapster)).round();
   }
 
   List<LaporanBulananModel> generateLaporanBulanan({
@@ -59,6 +60,8 @@ class CalculationService {
     required List<PendapatanHarianModel> pendapatan,
     required List<OperasionalModel> operasional,
     List<KasbonModel> kasbon = const [],
+    List<BonusDendaModel> bonusDenda = const [],
+    double persentaseCapster = 0.5,
   }) {
     final totalOperasional = hitungTotalOperasional(operasional);
     final operasionalPerCapster = hitungOperasionalPerCapster(
@@ -74,14 +77,22 @@ class CalculationService {
         pendapatanKotor,
         operasionalPerCapster,
       );
-      final bagianCapster = hitungBagianCapster(pendapatanBersih);
-      final bagianPondok = hitungBagianPondok(pendapatanBersih);
+      final bagianCapster = hitungBagianCapster(pendapatanBersih, persentaseCapster);
+      final bagianPondok = hitungBagianPondok(pendapatanBersih, persentaseCapster);
       
       final totalKasbon = kasbon
           .where((k) => k.idCapster == capster.idCapster)
           .fold(0, (sum, item) => sum + item.nominal);
+          
+      final bonus = bonusDenda
+          .where((b) => b.idCapster == capster.idCapster)
+          .fold(0, (sum, item) => sum + item.nominalBonus);
+          
+      final denda = bonusDenda
+          .where((d) => d.idCapster == capster.idCapster)
+          .fold(0, (sum, item) => sum + item.nominalDenda);
       
-      final sisaDiterimaCapster = bagianCapster - totalKasbon;
+      final sisaDiterimaCapster = (bagianCapster + bonus) - totalKasbon - denda;
 
       return LaporanBulananModel(
         bulan: bulan,
@@ -94,6 +105,8 @@ class CalculationService {
         bagianCapster: bagianCapster,
         bagianPondok: bagianPondok,
         totalKasbon: totalKasbon,
+        bonus: bonus,
+        denda: denda,
         sisaDiterimaCapster: sisaDiterimaCapster,
       );
     }).toList();

@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 
 import '../models/buku_kas_model.dart';
+import '../models/cabang_model.dart';
 import '../models/capster_model.dart';
 import '../models/laporan_bulanan_model.dart';
 import '../models/layanan_model.dart';
@@ -12,6 +13,11 @@ import '../models/user_role.dart';
 import '../models/app_notification_model.dart';
 import '../models/neraca_model.dart';
 import '../models/kasbon_model.dart';
+import '../models/bonus_denda_model.dart';
+import '../models/produk_model.dart';
+import '../models/penjualan_produk_model.dart';
+import '../models/absensi_model.dart';
+import '../models/penjualan_produk_model.dart';
 import '../utils/date_formatter.dart';
 import '../services/calculation_service.dart';
 
@@ -67,6 +73,8 @@ class FirebaseService {
       'pengeluaran',
       'saldo',
       'keterangan'
+    ,
+      'id_cabang',
     ],
     'operasional': [
       'id_operasional',
@@ -75,6 +83,8 @@ class FirebaseService {
       'akun',
       'nominal',
       'keterangan'
+    ,
+      'id_cabang',
     ],
     'laporan_bulanan': [
       'bulan',
@@ -88,6 +98,9 @@ class FirebaseService {
       'bagian_pondok',
       'total_kasbon',
       'sisa_diterima_capster',
+      'bonus',
+      'denda',
+      'id_cabang',
     ],
     'kasbon': [
       'id_kasbon',
@@ -96,6 +109,45 @@ class FirebaseService {
       'nama_capster',
       'nominal',
       'keterangan',
+      'status',
+      'id_cabang',
+    ],
+    'bonus_denda': [
+      'id_bonus_denda',
+      'bulan',
+      'id_capster',
+      'nama_capster',
+      'nominal_bonus',
+      'nominal_denda',
+      'keterangan',
+      'id_cabang',
+    ],
+    'produk': [
+      'id_produk',
+      'nama_produk',
+      'harga_beli',
+      'harga_jual',
+      'stok',
+      'id_cabang',
+    ],
+    'penjualan_produk': [
+      'id_penjualan',
+      'tanggal',
+      'id_produk',
+      'nama_produk',
+      'qty',
+      'harga_jual',
+      'total',
+      'id_cabang',
+    ],
+    'absensi': [
+      'id_absensi',
+      'tanggal',
+      'id_capster',
+      'nama_capster',
+      'waktu_check_in',
+      'waktu_check_out',
+      'id_cabang',
     ],
     'rekap_customer': [
       'id_rekap',
@@ -104,6 +156,8 @@ class FirebaseService {
       'customer_santri',
       'customer_umum',
       'total_customer'
+    ,
+      'id_cabang',
     ],
     'neraca': [
       'id_neraca',
@@ -122,6 +176,8 @@ class FirebaseService {
       'modal_awal',
       'laba_tahun_lalu',
       'prive'
+    ,
+      'id_cabang',
     ],
     'users': [
       'id_user',
@@ -131,8 +187,23 @@ class FirebaseService {
       'role',
       'status',
       'id_capster',
+    
+      'id_cabang',
+    ],
+    'cabang': [
+      'id_cabang',
+      'nama_cabang',
+      'alamat',
+    ],
+    'pengaturan': [
+      'id_pengaturan',
+      'persentase_capster',
+    
+      'id_cabang',
     ],
   };
+
+  String activeCabang = 'C001';
 
   final Map<String, List<List<dynamic>>> _dummyCollections = {};
 
@@ -167,18 +238,37 @@ class FirebaseService {
     _initialized = true;
   }
 
+  CollectionReference _getCollection(String collectionName) {
+    if (collectionName == 'cabang' || collectionName == 'users') {
+      return _firestore!.collection(collectionName);
+    }
+    return _firestore!.collection('cabang').doc(activeCabang).collection(collectionName);
+  }
+
   Future<List<List<dynamic>>> readRows(String collectionName) async {
     await init();
+    final header = _headers[collectionName] ?? const <String>[];
+    final hasCabang = header.contains('id_cabang');
+    final cabangIdx = hasCabang ? header.indexOf('id_cabang') : -1;
+
+    List<List<dynamic>> rows;
     if (_dummyMode) {
-      return List<List<dynamic>>.from(_dummyCollections[collectionName] ?? []);
+      rows = List<List<dynamic>>.from(_dummyCollections[collectionName] ?? []);
+    } else {
+      Query query = _getCollection(collectionName);
+      final snapshot = await query.get();
+      rows = snapshot.docs.map((doc) {
+        final data = doc.data() as Map<String, dynamic>;
+        return header.map((key) => data[key] ?? '').toList();
+      }).toList();
     }
 
-    final header = _headers[collectionName] ?? const <String>[];
-    final snapshot = await _firestore!.collection(collectionName).get();
-    final rows = snapshot.docs.map((doc) {
-      final data = doc.data();
-      return header.map((key) => data[key] ?? '').toList();
-    }).toList();
+    if (_dummyMode && hasCabang && collectionName != 'cabang' && collectionName != 'users') {
+      rows = rows.where((row) {
+        if (row.length <= cabangIdx) return true;
+        return row[cabangIdx].toString() == activeCabang;
+      }).toList();
+    }
 
     rows.sort((a, b) => _sortKey(collectionName, a).compareTo(
           _sortKey(collectionName, b),
@@ -186,35 +276,104 @@ class FirebaseService {
     return [header, ...rows];
   }
 
+  Future<double> getPersentaseCapster() async {
+    final data = await readRows('pengaturan');
+    if (data.length <= 1) return 0.5; // default 50%
+    final row = data.last; // Get the latest or first row
+    if (row.length > 1) {
+      final val = int.tryParse(row[1].toString()) ?? 50;
+      return val / 100.0;
+    }
+    return 0.5;
+  }
+
+  Future<void> savePersentaseCapster(int persentase) async {
+    final data = await readRows('pengaturan');
+    if (data.length <= 1) {
+      await appendRow('pengaturan', ['P001', persentase]);
+    } else {
+      final latestId = data.last[0].toString();
+      await _updateById('pengaturan', latestId, [latestId, persentase]);
+    }
+  }
+
+  Future<List<CabangModel>> getSemuaCabang() async {
+    final data = await readRows('cabang');
+    if (data.length <= 1) return [];
+    return data.skip(1).map((row) => CabangModel(
+      idCabang: row.length > 0 ? row[0].toString() : '',
+      namaCabang: row.length > 1 ? row[1].toString() : '',
+      alamat: row.length > 2 ? row[2].toString() : '',
+    )).toList();
+  }
+
+  Future<void> saveCabang(CabangModel model) async {
+    await appendRow('cabang', [model.idCabang, model.namaCabang, model.alamat]);
+  }
+
+  Future<void> updateCabang(CabangModel model) async {
+    await _updateById('cabang', model.idCabang, [model.idCabang, model.namaCabang, model.alamat]);
+  }
+
+  Future<void> deleteCabang(String idCabang) async {
+    await _deleteById('cabang', idCabang);
+  }
+
+  Future<void> setActiveCabang(String idCabang) async {
+    activeCabang = idCabang;
+  }
+
   Future<void> appendRow(String collectionName, List<dynamic> row) async {
     await init();
+    final header = _headers[collectionName] ?? const <String>[];
+    final List<dynamic> newRow = List.from(row);
+    if (header.contains('id_cabang') && collectionName != 'cabang') {
+      final idx = header.indexOf('id_cabang');
+      while (newRow.length <= idx) {
+        newRow.add(activeCabang);
+      }
+      newRow[idx] = activeCabang;
+    }
+
     if (_dummyMode) {
       _dummyCollections.putIfAbsent(collectionName, () => []);
       final rows = _dummyCollections[collectionName]!;
-      final docId = _docIdFor(collectionName, row);
-      for (var i = 1; i < rows.length; i++) {
+      final docId = _docIdFor(collectionName, newRow);
+      // Wait, dummyCollections doesn't have headers in them anymore, readRows adds header.
+      // Actually dummyCollections has header at index 0? No, readRows adds header.
+      for (var i = 0; i < rows.length; i++) {
         if (_docIdFor(collectionName, rows[i]) == docId) {
-          rows[i] = row;
+          rows[i] = newRow;
           return;
         }
       }
-      rows.add(row);
+      rows.add(newRow);
       return;
     }
-    await _setFirestoreRow(collectionName, row);
+    await _setFirestoreRow(collectionName, newRow);
   }
 
   Future<void> updateRow(
       String collectionName, int rowIndex, List<dynamic> row) async {
     await init();
+    final header = _headers[collectionName] ?? const <String>[];
+    final List<dynamic> newRow = List.from(row);
+    if (header.contains('id_cabang') && collectionName != 'cabang') {
+      final idx = header.indexOf('id_cabang');
+      while (newRow.length <= idx) {
+        newRow.add(activeCabang);
+      }
+      newRow[idx] = activeCabang;
+    }
+
     if (_dummyMode) {
       final rows = _dummyCollections[collectionName];
       if (rows != null && rowIndex >= 0 && rowIndex < rows.length) {
-        rows[rowIndex] = row;
+        rows[rowIndex] = newRow;
       }
       return;
     }
-    await _setFirestoreRow(collectionName, row);
+    await _setFirestoreRow(collectionName, newRow);
   }
 
   Future<void> deleteRow(String collectionName, int rowNumber) async {
@@ -396,25 +555,32 @@ class FirebaseService {
     final monthKey = DateFormatter.toStorageMonth(bulan);
     final rows = await readRows('kasbon');
     return rows.skip(1).map(KasbonModel.fromRow).where((item) {
+      if (item.status != 'approved') return false;
       return DateFormatter.toStorageDate(item.tanggal).startsWith(monthKey);
     }).toList();
   }
 
   Future<void> saveKasbon(KasbonModel model) async {
-    await appendRow('kasbon', model.toRow());
+    // Determine whether to insert or update based on id existence
+    await _updateById('kasbon', model.idKasbon, model.toRow());
 
-    // Otomatis catat Kasbon sebagai pengeluaran di Buku Kas
-    final kasModel = BukuKasModel(
-      idKas: 'BK-${model.idKasbon}',
-      tanggal: model.tanggal,
-      uraian: 'Kasbon capster ${model.namaCapster}',
-      akun: 'Kasbon Karyawan',
-      penerimaan: 0,
-      pengeluaran: model.nominal,
-      saldo: 0, // Saldo will be calculated dynamically in getBukuKas
-      keterangan: model.keterangan,
-    );
-    await upsertBukuKas(kasModel);
+    if (model.status == 'approved') {
+      // Otomatis catat Kasbon sebagai pengeluaran di Buku Kas
+      final kasModel = BukuKasModel(
+        idKas: 'BK-${model.idKasbon}',
+        tanggal: model.tanggal,
+        uraian: 'Kasbon capster ${model.namaCapster}',
+        akun: 'Kasbon Karyawan',
+        penerimaan: 0,
+        pengeluaran: model.nominal,
+        saldo: 0, // Saldo will be calculated dynamically in getBukuKas
+        keterangan: model.keterangan,
+      );
+      await upsertBukuKas(kasModel);
+    } else {
+      // Jika kasbon ditolak/pending (edit), cabut dari buku kas
+      await deleteBukuKas('BK-${model.idKasbon}');
+    }
 
     await _syncKasPondok(DateFormatter.toStorageMonth(model.tanggal));
   }
@@ -428,6 +594,21 @@ class FirebaseService {
     await _deleteById('kasbon', model.idKasbon);
     await deleteBukuKas('BK-${model.idKasbon}');
     await _syncKasPondok(DateFormatter.toStorageMonth(model.tanggal));
+  }
+
+  Future<List<BonusDendaModel>> getBonusDendaByMonth(String bulan) async {
+    final rows = await readRows('bonus_denda');
+    return rows.skip(1).map(BonusDendaModel.fromRow).where((item) {
+      return item.bulan == bulan;
+    }).toList();
+  }
+
+  Future<void> saveBonusDenda(BonusDendaModel model) async {
+    await _updateById('bonus_denda', model.idBonusDenda, model.toRow());
+  }
+
+  Future<void> deleteBonusDenda(BonusDendaModel model) async {
+    await _deleteById('bonus_denda', model.idBonusDenda);
   }
 
   Future<List<UserModel>> getUsers() async {
@@ -523,11 +704,11 @@ class FirebaseService {
     }
     data['updated_at'] = FieldValue.serverTimestamp();
     final id = explicitId ?? _docIdFor(collectionName, row);
-    await _firestore!.collection(collectionName).doc(id).set(data);
+    await _getCollection(collectionName).doc(id).set(data);
   }
 
   Future<void> _deleteByDocumentId(String collectionName, String id) async {
-    await _firestore!.collection(collectionName).doc(id).delete();
+    await _getCollection(collectionName).doc(id).delete();
   }
 
   Future<void> _syncKasPondok(String bulan) async {
@@ -535,6 +716,8 @@ class FirebaseService {
     final pendapatan = await getPendapatanByMonth(bulan);
     final operasional = await getOperasionalByMonth(bulan);
     final kasbon = await getKasbonByMonth(bulan);
+    final bonusDenda = await getBonusDendaByMonth(bulan);
+    final persentase = await getPersentaseCapster();
     
     final laporan = CalculationService().generateLaporanBulanan(
       bulan: bulan,
@@ -542,6 +725,8 @@ class FirebaseService {
       pendapatan: pendapatan,
       operasional: operasional,
       kasbon: kasbon,
+      bonusDenda: bonusDenda,
+      persentaseCapster: persentase,
     );
     
     final totalBagianPondok = laporan.fold(0, (total, item) => total + item.bagianPondok);
@@ -549,7 +734,6 @@ class FirebaseService {
     
     if (totalBagianPondok <= 0) {
       await deleteBukuKas(idKas);
-      return;
     }
     
     String tanggalAkhir = DateFormatter.formatDateKey(DateTime.now());
@@ -564,18 +748,42 @@ class FirebaseService {
     
     final saldoSebelumnya = await getSaldoSebelumKas(tanggalAkhir, idKas);
     
-    final kasModel = BukuKasModel(
-      idKas: idKas,
-      tanggal: tanggalAkhir,
-      uraian: 'Pendapatan usaha pondok bulan ${DateFormatter.displayMonth(bulan)}',
-      akun: 'Pendapatan Usaha',
-      penerimaan: totalBagianPondok,
-      pengeluaran: 0,
-      saldo: saldoSebelumnya + totalBagianPondok,
-      keterangan: 'Otomatis dari bagian pondok pada laporan pembagian hasil',
-    );
+    if (totalBagianPondok > 0) {
+      final kasModel = BukuKasModel(
+        idKas: idKas,
+        tanggal: tanggalAkhir,
+        uraian: 'Pendapatan usaha pondok bulan ${DateFormatter.displayMonth(bulan)}',
+        akun: 'Pendapatan Usaha',
+        penerimaan: totalBagianPondok,
+        pengeluaran: 0,
+        saldo: saldoSebelumnya + totalBagianPondok,
+        keterangan: 'Otomatis dari bagian pondok pada laporan pembagian hasil',
+      );
+      
+      await upsertBukuKas(kasModel);
+    }
     
-    await upsertBukuKas(kasModel);
+    // Otomatis catat pengembalian kasbon (karena dipotong dari bagian capster)
+    final totalKasbonDikembalikan = laporan.fold(0, (total, item) => total + item.totalKasbon);
+    final idKasbonKembali = 'K-PENGEMBALIAN-$bulan';
+    
+    if (totalKasbonDikembalikan <= 0) {
+      await deleteBukuKas(idKasbonKembali);
+    } else {
+      // Saldo dihitung ulang nanti saat getBukuKas, kita pass 0 saja
+      final kasbonKembaliModel = BukuKasModel(
+        idKas: idKasbonKembali,
+        tanggal: tanggalAkhir,
+        uraian: 'Pengembalian kasbon/piutang karyawan potong gaji ${DateFormatter.displayMonth(bulan)}',
+        akun: 'Kasbon Karyawan',
+        penerimaan: totalKasbonDikembalikan,
+        pengeluaran: 0,
+        saldo: 0,
+        keterangan: 'Otomatis potong gaji pada laporan pembagian hasil',
+      );
+      await upsertBukuKas(kasbonKembaliModel);
+    }
+
     await saveLaporanBulanan(laporan);
   }
 
@@ -622,6 +830,12 @@ class FirebaseService {
 
   void _seedDummyData() {
     if (_dummyCollections.isNotEmpty) return;
+
+    _dummyCollections['cabang'] = [
+      _headers['cabang']!,
+      ['C001', 'Garden Barbershop Pusat', 'Jl. KH. Agus Salim No. 1'],
+      ['C002', 'Garden Barbershop Cabang 2', 'Jl. Ahmad Yani No. 12'],
+    ];
     _dummyCollections['capster'] = [
       _headers['capster']!,
       ['C001', 'Muhamad Diva Syarri', '081234567001', 'aktif'],
@@ -808,6 +1022,9 @@ class FirebaseService {
     _dummyCollections['laporan_bulanan'] = [_headers['laporan_bulanan']!];
     _dummyCollections['kasbon'] = [_headers['kasbon']!];
     _dummyCollections['rekap_customer'] = [_headers['rekap_customer']!];
+    _dummyCollections['produk'] = [_headers['produk']!];
+    _dummyCollections['penjualan_produk'] = [_headers['penjualan_produk']!];
+    _dummyCollections['absensi'] = [_headers['absensi']!];
     _dummyCollections['users'] = [
       _headers['users']!,
       ['UADMIN', 'admin', 'admin123', 'Admin Garden', 'admin', 'aktif', ''],
@@ -849,12 +1066,11 @@ class FirebaseService {
     }
 
     try {
-      final snapshot = await _firestore!
-          .collection('notifications')
+      final snapshot = await _getCollection('notifications')
           .orderBy('date', descending: true)
           .limit(50)
           .get();
-      return snapshot.docs.map((doc) => AppNotification.fromMap(doc.data(), doc.id)).toList();
+      return snapshot.docs.map((doc) => AppNotification.fromMap(doc.data() as Map<String, dynamic>, doc.id)).toList();
     } catch (e) {
       print("Warning: Gagal mengambil notifikasi: $e");
       return [];
@@ -868,13 +1084,12 @@ class FirebaseService {
       return;
     }
 
-    yield* _firestore!
-        .collection('notifications')
+    yield* _getCollection('notifications')
         .orderBy('date', descending: true)
         .limit(50)
         .snapshots()
         .map((snapshot) => snapshot.docs
-            .map((doc) => AppNotification.fromMap(doc.data(), doc.id))
+            .map((doc) => AppNotification.fromMap(doc.data() as Map<String, dynamic>, doc.id))
             .toList());
   }
 
@@ -883,8 +1098,7 @@ class FirebaseService {
     if (_dummyMode || _firestore == null) return 0;
     
     try {
-      final snapshot = await _firestore!
-          .collection('notifications')
+      final snapshot = await _getCollection('notifications')
           .where('isRead', isEqualTo: false)
           .get();
       return snapshot.docs.length;
@@ -910,13 +1124,13 @@ class FirebaseService {
       type: type,
     );
     
-    await _firestore!.collection('notifications').doc(notification.id).set(notification.toMap());
+    await _getCollection('notifications').doc(notification.id).set(notification.toMap());
   }
 
   Future<void> markNotificationAsRead(String id) async {
     await init();
     if (_dummyMode || _firestore == null) return;
-    await _firestore!.collection('notifications').doc(id).update({'isRead': true});
+    await _getCollection('notifications').doc(id).update({'isRead': true});
   }
 
   Future<void> markAllNotificationsAsRead() async {
@@ -924,8 +1138,7 @@ class FirebaseService {
     if (_dummyMode || _firestore == null) return;
     
     final batch = _firestore!.batch();
-    final snapshot = await _firestore!
-        .collection('notifications')
+    final snapshot = await _getCollection('notifications')
         .where('isRead', isEqualTo: false)
         .get();
         
@@ -960,20 +1173,20 @@ class FirebaseService {
       return NeracaModel.defaultBalances(monthKey);
     }
 
-    final doc = await _firestore!.collection('neraca').doc(id).get();
+    final doc = await _getCollection('neraca').doc(id).get();
     if (doc.exists && doc.data() != null) {
-      return NeracaModel.fromMap(doc.data()!);
+      return NeracaModel.fromMap(doc.data() as Map<String, dynamic>);
     }
 
     try {
-      final query = await _firestore!.collection('neraca')
+      final query = await _getCollection('neraca')
           .where('bulan', isLessThan: monthKey)
           .orderBy('bulan', descending: true)
           .limit(1)
           .get();
           
       if (query.docs.isNotEmpty) {
-        final oldModel = NeracaModel.fromMap(query.docs.first.data());
+        final oldModel = NeracaModel.fromMap(query.docs.first.data() as Map<String, dynamic>);
         return oldModel.copyWithNewBulan(monthKey);
       }
     } catch (e) {
@@ -993,7 +1206,7 @@ class FirebaseService {
       return;
     }
     
-    await _firestore!.collection('neraca').doc(model.idNeraca).set(model.toMap());
+    await _getCollection('neraca').doc(model.idNeraca).set(model.toMap());
   }
 
   // --- SEMUA LAPORAN BULANAN (REKAP) ---
@@ -1014,9 +1227,203 @@ class FirebaseService {
       return result;
     }
 
-    final querySnapshot = await _firestore!.collection('laporan_bulanan').get();
+    final querySnapshot = await _getCollection('laporan_bulanan').get();
     return querySnapshot.docs
-        .map((doc) => LaporanBulananModel.fromMap(doc.data()))
+        .map((doc) => LaporanBulananModel.fromMap(doc.data() as Map<String, dynamic>))
         .toList();
+  }
+  // --- PRODUK ---
+  Future<List<ProdukModel>> getProduk() async {
+    await init();
+    if (_dummyMode) {
+      final rows = _dummyCollections['produk'] ?? [];
+      return rows.skip(1).map((r) => ProdukModel.fromRow(r)).toList();
+    }
+    final snap = await _getCollection('produk').get();
+    return snap.docs.map((d) {
+      final map = d.data() as Map<String, dynamic>;
+      final header = _headers['produk']!;
+      final row = header.map((k) => map[k]).toList();
+      return ProdukModel.fromRow(row);
+    }).toList();
+  }
+
+  Future<void> saveProduk(ProdukModel model) async {
+    await init();
+    if (_dummyMode) {
+      final rows = _dummyCollections['produk']!;
+      final idx = rows.indexWhere((r) => r.isNotEmpty && r[0] == model.idProduk);
+      if (idx != -1) {
+        await _updateById('produk', model.idProduk, model.toRow());
+      } else {
+        await appendRow('produk', model.toRow());
+      }
+      return;
+    }
+    final map = <String, dynamic>{};
+    final header = _headers['produk']!;
+    final row = model.toRow();
+    for (var i = 0; i < header.length; i++) {
+      map[header[i]] = row[i];
+    }
+    await _getCollection('produk').doc(model.idProduk).set(map);
+  }
+
+  Future<void> deleteProduk(ProdukModel model) async {
+    await init();
+    if (_dummyMode) {
+      final rows = _dummyCollections['produk']!;
+      rows.removeWhere((r) => r.isNotEmpty && r[0] == model.idProduk);
+      return;
+    }
+    await _getCollection('produk').doc(model.idProduk).delete();
+  }
+
+  // --- PENJUALAN PRODUK ---
+  Future<List<PenjualanProdukModel>> getPenjualanProdukByDate(String tanggal) async {
+    await init();
+    if (_dummyMode) {
+      final rows = _dummyCollections['penjualan_produk'] ?? [];
+      return rows.skip(1).where((r) => r.length > 1 && r[1] == tanggal).map((r) => PenjualanProdukModel.fromRow(r)).toList();
+    }
+    final snap = await _getCollection('penjualan_produk')
+        .where('tanggal', isEqualTo: tanggal)
+        .get();
+    return snap.docs.map((d) {
+      final map = d.data() as Map<String, dynamic>;
+      final header = _headers['penjualan_produk']!;
+      final row = header.map((k) => map[k]).toList();
+      return PenjualanProdukModel.fromRow(row);
+    }).toList();
+  }
+
+  Future<void> savePenjualanProduk(PenjualanProdukModel model) async {
+    await init();
+    if (_dummyMode) {
+      final rows = _dummyCollections['penjualan_produk']!;
+      final idx = rows.indexWhere((r) => r.isNotEmpty && r[0] == model.idPenjualan);
+      if (idx != -1) {
+        await _updateById('penjualan_produk', model.idPenjualan, model.toRow());
+      } else {
+        await appendRow('penjualan_produk', model.toRow());
+      }
+    } else {
+      final map = <String, dynamic>{};
+      final header = _headers['penjualan_produk']!;
+      final row = model.toRow();
+      for (var i = 0; i < header.length; i++) {
+        map[header[i]] = row[i];
+      }
+      await _getCollection('penjualan_produk').doc(model.idPenjualan).set(map);
+    }
+    
+    // Potong stok
+    final listProduk = await getProduk();
+    final idx = listProduk.indexWhere((p) => p.idProduk == model.idProduk);
+    if (idx != -1) {
+      final oldP = listProduk[idx];
+      final newP = ProdukModel(
+        idProduk: oldP.idProduk,
+        namaProduk: oldP.namaProduk,
+        hargaBeli: oldP.hargaBeli,
+        hargaJual: oldP.hargaJual,
+        stok: oldP.stok - model.qty, // kurang stok
+        idCabang: oldP.idCabang,
+      );
+      await saveProduk(newP);
+      
+      // Catat Penerimaan dan HPP di Buku Kas
+      final kasMasuk = BukuKasModel(
+        idKas: 'BKM-${model.idPenjualan}',
+        tanggal: model.tanggal,
+        uraian: 'Penjualan Produk: ${model.namaProduk} x${model.qty}',
+        akun: 'Pendapatan Lainnya',
+        penerimaan: model.total,
+        pengeluaran: 0,
+        saldo: 0,
+        keterangan: '',
+      );
+      final kasHpp = BukuKasModel(
+        idKas: 'BKH-${model.idPenjualan}',
+        tanggal: model.tanggal,
+        uraian: 'HPP Penjualan: ${model.namaProduk} x${model.qty}',
+        akun: 'HPP',
+        penerimaan: 0,
+        pengeluaran: oldP.hargaBeli * model.qty,
+        saldo: 0,
+        keterangan: 'Harga Modal Produk',
+      );
+      await upsertBukuKas(kasMasuk);
+      await upsertBukuKas(kasHpp);
+    }
+  }
+
+  Future<void> deletePenjualanProduk(PenjualanProdukModel model) async {
+    await init();
+    if (_dummyMode) {
+      final rows = _dummyCollections['penjualan_produk']!;
+      rows.removeWhere((r) => r.isNotEmpty && r[0] == model.idPenjualan);
+    } else {
+      await _getCollection('penjualan_produk').doc(model.idPenjualan).delete();
+    }
+    
+    // Kembalikan stok
+    final listProduk = await getProduk();
+    final idx = listProduk.indexWhere((p) => p.idProduk == model.idProduk);
+    if (idx != -1) {
+      final oldP = listProduk[idx];
+      final newP = ProdukModel(
+        idProduk: oldP.idProduk,
+        namaProduk: oldP.namaProduk,
+        hargaBeli: oldP.hargaBeli,
+        hargaJual: oldP.hargaJual,
+        stok: oldP.stok + model.qty, // tambah stok
+        idCabang: oldP.idCabang,
+      );
+      await saveProduk(newP);
+      
+      // Hapus dari buku kas
+      await deleteBukuKas('BKM-${model.idPenjualan}');
+      await deleteBukuKas('BKH-${model.idPenjualan}');
+    }
+  }
+
+  // --- ABSENSI ---
+  Future<List<AbsensiModel>> getAbsensiByDate(String tanggal) async {
+    await init();
+    if (_dummyMode) {
+      final rows = _dummyCollections['absensi'] ?? [];
+      return rows.skip(1).where((r) => r.length > 1 && r[1] == tanggal).map((r) => AbsensiModel.fromRow(r)).toList();
+    }
+    final snap = await _getCollection('absensi')
+        .where('tanggal', isEqualTo: tanggal)
+        .get();
+    return snap.docs.map((d) {
+      final map = d.data() as Map<String, dynamic>;
+      final header = _headers['absensi']!;
+      final row = header.map((k) => map[k]).toList();
+      return AbsensiModel.fromRow(row);
+    }).toList();
+  }
+
+  Future<void> saveAbsensi(AbsensiModel model) async {
+    await init();
+    if (_dummyMode) {
+      final rows = _dummyCollections['absensi']!;
+      final idx = rows.indexWhere((r) => r.isNotEmpty && r[0] == model.idAbsensi);
+      if (idx != -1) {
+        await _updateById('absensi', model.idAbsensi, model.toRow());
+      } else {
+        await appendRow('absensi', model.toRow());
+      }
+    } else {
+      final map = <String, dynamic>{};
+      final header = _headers['absensi']!;
+      final row = model.toRow();
+      for (var i = 0; i < header.length; i++) {
+        map[header[i]] = row[i];
+      }
+      await _getCollection('absensi').doc(model.idAbsensi).set(map);
+    }
   }
 }
