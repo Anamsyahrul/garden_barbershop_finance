@@ -14,3 +14,9 @@ linux/flutter/ephemeral/
 windows/flutter/ephemeral/
 assets/credentials/service_account.json
 android/app/google-services.json
+
+# Scratch and temporary migration scripts
+analyze_out*.txt
+patch_*.py
+scratch_*.txt
+remove_dropdown.py
