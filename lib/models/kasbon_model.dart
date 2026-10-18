@@ -6,6 +6,7 @@ class KasbonModel {
     required this.namaCapster,
     required this.nominal,
     required this.keterangan,
+    this.status = 'approved',
   });
 
   final String idKasbon;
@@ -14,6 +15,7 @@ class KasbonModel {
   final String namaCapster;
   final int nominal;
   final String keterangan;
+  final String status; // 'pending', 'approved', 'rejected'
 
   factory KasbonModel.fromRow(List<dynamic> row) {
     return KasbonModel(
@@ -23,6 +25,7 @@ class KasbonModel {
       namaCapster: row.length > 3 ? row[3].toString() : '',
       nominal: row.length > 4 ? int.tryParse(row[4].toString()) ?? 0 : 0,
       keterangan: row.length > 5 ? row[5].toString() : '',
+      status: row.length > 6 ? row[6].toString() : 'approved',
     );
   }
 
@@ -33,5 +36,6 @@ class KasbonModel {
         namaCapster,
         nominal,
         keterangan,
+        status,
       ];
 }

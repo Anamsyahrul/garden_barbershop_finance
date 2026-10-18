@@ -10,6 +10,8 @@ class LaporanBulananModel {
     required this.bagianCapster,
     required this.bagianPondok,
     required this.totalKasbon,
+    this.bonus = 0,
+    this.denda = 0,
     required this.sisaDiterimaCapster,
   });
 
@@ -23,6 +25,8 @@ class LaporanBulananModel {
   final int bagianCapster;
   final int bagianPondok;
   final int totalKasbon;
+  final int bonus;
+  final int denda;
   final int sisaDiterimaCapster;
 
   factory LaporanBulananModel.fromRow(List<dynamic> row) {
@@ -38,6 +42,8 @@ class LaporanBulananModel {
       bagianPondok: row.length > 8 ? int.tryParse(row[8].toString()) ?? 0 : 0,
       totalKasbon: row.length > 9 ? int.tryParse(row[9].toString()) ?? 0 : 0,
       sisaDiterimaCapster: row.length > 10 ? int.tryParse(row[10].toString()) ?? 0 : 0,
+      bonus: row.length > 11 ? int.tryParse(row[11].toString()) ?? 0 : 0,
+      denda: row.length > 12 ? int.tryParse(row[12].toString()) ?? 0 : 0,
     );
   }
 
@@ -53,6 +59,8 @@ class LaporanBulananModel {
         bagianPondok,
         totalKasbon,
         sisaDiterimaCapster,
+        bonus,
+        denda,
       ];
 
   factory LaporanBulananModel.fromMap(Map<String, dynamic> map) {
@@ -68,6 +76,8 @@ class LaporanBulananModel {
       bagianPondok: map['bagian_pondok'] ?? 0,
       totalKasbon: map['total_kasbon'] ?? 0,
       sisaDiterimaCapster: map['sisa_diterima_capster'] ?? 0,
+      bonus: map['bonus'] ?? 0,
+      denda: map['denda'] ?? 0,
     );
   }
 
@@ -84,6 +94,29 @@ class LaporanBulananModel {
       'bagian_pondok': bagianPondok,
       'total_kasbon': totalKasbon,
       'sisa_diterima_capster': sisaDiterimaCapster,
+      'bonus': bonus,
+      'denda': denda,
     };
   }
+}
+
+class LaporanBulanAgregat {
+  LaporanBulanAgregat({
+    required this.bulan,
+    required this.pendapatanKotor,
+    required this.totalOperasional,
+    required this.pendapatanBersih,
+    required this.bagianPondok,
+    required this.sisaDiterimaCapster,
+    required this.totalSantri,
+    required this.totalUmum,
+  });
+  final String bulan;
+  final int pendapatanKotor;
+  final int totalOperasional;
+  final int pendapatanBersih;
+  final int bagianPondok;
+  final int sisaDiterimaCapster;
+  final int totalSantri;
+  final int totalUmum;
 }
