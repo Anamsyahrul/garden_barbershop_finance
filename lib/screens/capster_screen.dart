@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
-
 import '../models/capster_model.dart';
+import 'slip_gaji_screen.dart';
 import '../services/firebase_service.dart';
 import '../theme/app_theme.dart';
 import '../utils/validators.dart';
@@ -251,9 +251,19 @@ class _CapsterScreenState extends State<CapsterScreen> {
               onSelected: (value) {
                 if (value == 'edit') _showForm(data: item);
                 if (value == 'nonaktif') _nonaktifkan(item);
+                if (value == 'slip_gaji') {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => SlipGajiScreen(capster: item),
+                    ),
+                  );
+                }
                 if (value == 'hapus') _hapus(item);
               },
               itemBuilder: (_) => const [
+                PopupMenuItem(value: 'slip_gaji', child: Text('Cetak Slip Gaji', style: TextStyle(color: AppColors.teal, fontWeight: FontWeight.bold))),
+                PopupMenuDivider(),
                 PopupMenuItem(value: 'edit', child: Text('Ubah')),
                 PopupMenuItem(value: 'nonaktif', child: Text('Nonaktifkan')),
                 PopupMenuDivider(),

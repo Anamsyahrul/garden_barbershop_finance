@@ -1,8 +1,11 @@
+import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/services.dart' show rootBundle;
+import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
+import 'package:share_plus/share_plus.dart';
 import '../models/laporan_bulanan_model.dart';
 import '../models/operasional_model.dart';
 import '../models/pendapatan_harian_model.dart';
@@ -100,7 +103,14 @@ class PdfGeneratorService {
       totalHpp = 212500;
     }
     int labaKotor = totalPendapatan - totalHpp;
-    int totalOperasional = operasional.fold(0, (sum, item) => sum + item.nominal);
+    
+    // Hitung total Gaji Karyawan (Bagi Hasil Capster) untuk bulan ini
+    int totalGajiKaryawan = semuaLaporan
+        .where((l) => l.bulan == bulan)
+        .fold(0, (sum, item) => sum + item.bagianCapster + item.bonus - item.denda);
+
+    int totalOperasionalFisik = operasional.fold(0, (sum, item) => sum + item.nominal);
+    int totalOperasional = totalOperasionalFisik + totalGajiKaryawan;
     int labaBersih = labaKotor - totalOperasional;
 
     // --- Components ---
@@ -420,6 +430,17 @@ class PdfGeneratorService {
                   crossAxisAlignment: pw.CrossAxisAlignment.start,
                   children: [
                     pw.Text('Biaya Administrasi dan Umum', style: const pw.TextStyle(fontSize: 12)),
+                    if (totalGajiKaryawan > 0)
+                      pw.Padding(
+                        padding: const pw.EdgeInsets.only(left: 10, top: 4),
+                        child: pw.Row(
+                          mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                          children: [
+                            pw.Text('Gaji Karyawan (Bagi Hasil)', style: const pw.TextStyle(fontSize: 12)),
+                            pw.Text(CurrencyFormatter.format(totalGajiKaryawan), style: const pw.TextStyle(fontSize: 12)),
+                          ],
+                        ),
+                      ),
                     for (var op in operasional)
                       pw.Padding(
                         padding: const pw.EdgeInsets.only(left: 10, top: 4),
@@ -467,13 +488,26 @@ class PdfGeneratorService {
 
     // Menyiapkan data historis untuk grafik laba bersih
     final Map<String, int> labaPerBulan = {};
+    
+    // Kelompokkan data Buku Kas untuk mendapatkan Laba Bersih historis
+    // Laba Bersih = Bagian Pondok + Pendapatan Lainnya - HPP
+    final bulanBerjalan = DateFormatter.toStorageMonth(bulan);
+    
     for (var lap in semuaLaporan) {
-      if (lap.namaCapster == 'Total Semua' || lap.idCapster == 'C000') {
-        labaPerBulan[lap.bulan] = lap.pendapatanBersih; // atau bagianPondok
+      final monthKey = DateFormatter.toStorageMonth(lap.bulan);
+      labaPerBulan[monthKey] = (labaPerBulan[monthKey] ?? 0) + lap.bagianPondok;
+    }
+    
+    for (var b in bukuKas) {
+      final monthKey = DateFormatter.toStorageMonth(b.tanggal);
+      if (b.akun == 'Pendapatan Lainnya') {
+        labaPerBulan[monthKey] = (labaPerBulan[monthKey] ?? 0) + b.penerimaan;
+      } else if (b.akun == 'HPP' || b.akun == 'Harga Pokok Penjualan') {
+        labaPerBulan[monthKey] = (labaPerBulan[monthKey] ?? 0) - b.pengeluaran;
       }
     }
-    // Gabungkan dengan bulan berjalan (jika belum ada/ingin overwrite dengan yang dihitung live)
-    final bulanBerjalan = DateFormatter.toStorageMonth(bulan);
+    
+    // Overwrite bulan berjalan dengan nilai yang dihitung live agar lebih akurat jika ada perubahan yg belum di-save
     labaPerBulan[bulanBerjalan] = labaBersih;
 
     final sortedBulan = labaPerBulan.keys.toList()..sort();
@@ -1033,6 +1067,11 @@ class PdfGeneratorService {
     );
   }
 
+  static Future<void> generateAndPrintLaporanLengkap(List<LaporanBulanAgregat> data) async {
+    // Dummy method for now
+    // Future implementation will print a complete recap report based on data
+  }
+
   static pw.Widget _buildNeracaTable(String title, Map<String, int> items, int total, PdfColor headerColor, PdfColor borderColor) {
     return pw.Container(
       decoration: pw.BoxDecoration(border: pw.Border.all(color: borderColor)),
@@ -1116,6 +1155,313 @@ class PdfGeneratorService {
           pw.Text(content, style: const pw.TextStyle(fontSize: 10, lineSpacing: 2)),
         ]
       )
+    );
+  }
+
+  static Future<Uint8List> buildSlipGajiPdfBytes({
+    required String bulan,
+    required CapsterModel capster,
+    required int omzet,
+    required int persen,
+    required int gajiPokok,
+    required int bonus,
+    required int denda,
+    required int kasbon,
+    required int gajiBersih,
+  }) async {
+    final pdf = pw.Document();
+
+    pw.MemoryImage? logoImage;
+    pw.MemoryImage? ttdImage;
+    try {
+      final ByteData data = await rootBundle.load('assets/branding/garden_gold_logo.png');
+      logoImage = pw.MemoryImage(data.buffer.asUint8List());
+      final ByteData ttdData = await rootBundle.load('assets/branding/ttd_dan_stempel.png');
+      ttdImage = pw.MemoryImage(ttdData.buffer.asUint8List());
+    } catch (_) {}
+
+    final tealColor = PdfColor.fromHex('#1E3D38');
+    final goldColor = PdfColor.fromHex('#B59A55');
+    final bgGrey = PdfColor.fromHex('#F8F9FA');
+    final borderGrey = PdfColor.fromHex('#E0E0E0');
+
+    pdf.addPage(
+      pw.Page(
+        pageFormat: PdfPageFormat.a4,
+        margin: const pw.EdgeInsets.symmetric(horizontal: 40, vertical: 36),
+        build: (pw.Context context) {
+          return pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              // Header with logo
+              pw.Row(
+                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: pw.CrossAxisAlignment.center,
+                children: [
+                  pw.Column(
+                    crossAxisAlignment: pw.CrossAxisAlignment.start,
+                    children: [
+                      pw.Text(
+                        'GARDEN BARBERSHOP',
+                        style: pw.TextStyle(
+                          fontSize: 22,
+                          fontWeight: pw.FontWeight.bold,
+                          color: tealColor,
+                        ),
+                      ),
+                      pw.SizedBox(height: 2),
+                      pw.Text(
+                        'SLIP GAJI KARYAWAN & BAGI HASIL',
+                        style: pw.TextStyle(
+                          fontSize: 13,
+                          fontWeight: pw.FontWeight.bold,
+                          color: goldColor,
+                          letterSpacing: 1.2,
+                        ),
+                      ),
+                      pw.SizedBox(height: 2),
+                      pw.Text(
+                        'Periode Penggajian: $bulan',
+                        style: const pw.TextStyle(
+                          fontSize: 11,
+                          color: PdfColors.grey700,
+                        ),
+                      ),
+                    ],
+                  ),
+                  if (logoImage != null)
+                    pw.Container(
+                      width: 60,
+                      height: 60,
+                      child: pw.Image(logoImage),
+                    ),
+                ],
+              ),
+              pw.SizedBox(height: 12),
+              pw.Divider(thickness: 2, color: tealColor),
+              pw.SizedBox(height: 12),
+
+              // Info Capster Box
+              pw.Container(
+                decoration: pw.BoxDecoration(
+                  color: bgGrey,
+                  borderRadius: const pw.BorderRadius.all(pw.Radius.circular(6)),
+                  border: pw.Border.all(color: borderGrey),
+                ),
+                padding: const pw.EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                child: pw.Row(
+                  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                  children: [
+                    pw.Column(
+                      crossAxisAlignment: pw.CrossAxisAlignment.start,
+                      children: [
+                        pw.Text('Nama Capster', style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey600)),
+                        pw.SizedBox(height: 2),
+                        pw.Text(capster.namaCapster, style: pw.TextStyle(fontSize: 13, fontWeight: pw.FontWeight.bold, color: tealColor)),
+                        pw.SizedBox(height: 4),
+                        pw.Text('No. HP / Kontak: ${capster.noHp.isEmpty ? '-' : capster.noHp}', style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey700)),
+                      ],
+                    ),
+                    pw.Column(
+                      crossAxisAlignment: pw.CrossAxisAlignment.end,
+                      children: [
+                        pw.Text('ID Capster: ${capster.idCapster}', style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey600)),
+                        pw.SizedBox(height: 2),
+                        pw.Container(
+                          padding: const pw.EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          decoration: pw.BoxDecoration(
+                            color: PdfColors.teal50,
+                            borderRadius: const pw.BorderRadius.all(pw.Radius.circular(4)),
+                            border: pw.Border.all(color: PdfColors.teal200),
+                          ),
+                          child: pw.Text('Bagi Hasil: $persen%', style: pw.TextStyle(fontSize: 11, fontWeight: pw.FontWeight.bold, color: tealColor)),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              pw.SizedBox(height: 16),
+
+              // Rincian Layanan & Omzet
+              pw.Text('RINCIAN PENDAPATAN & KOMISI', style: pw.TextStyle(fontSize: 11, fontWeight: pw.FontWeight.bold, color: tealColor)),
+              pw.SizedBox(height: 6),
+              pw.Container(
+                decoration: pw.BoxDecoration(
+                  border: pw.Border.all(color: borderGrey),
+                  borderRadius: const pw.BorderRadius.all(pw.Radius.circular(6)),
+                ),
+                padding: const pw.EdgeInsets.all(12),
+                child: pw.Column(
+                  children: [
+                    _buildRow('Total Omzet Layanan Dihasilkan', CurrencyFormatter.format(omzet)),
+                    pw.Divider(color: PdfColors.grey200),
+                    _buildRow('Bagi Hasil Layanan ($persen%)', CurrencyFormatter.format(gajiPokok), isPositive: true),
+                    if (bonus > 0)
+                      _buildRow('Bonus / Apresiasi Khusus', '+ ${CurrencyFormatter.format(bonus)}', isPositive: true),
+                  ],
+                ),
+              ),
+              pw.SizedBox(height: 14),
+
+              // Rincian Potongan
+              pw.Text('RINCIAN POTONGAN', style: pw.TextStyle(fontSize: 11, fontWeight: pw.FontWeight.bold, color: PdfColors.red800)),
+              pw.SizedBox(height: 6),
+              pw.Container(
+                decoration: pw.BoxDecoration(
+                  border: pw.Border.all(color: borderGrey),
+                  borderRadius: const pw.BorderRadius.all(pw.Radius.circular(6)),
+                ),
+                padding: const pw.EdgeInsets.all(12),
+                child: pw.Column(
+                  children: [
+                    if (denda > 0)
+                      _buildRow('Denda Keterlambatan / Kedisiplinan', '- ${CurrencyFormatter.format(denda)}', isNegative: true),
+                    if (kasbon > 0)
+                      _buildRow('Potongan Pelunasan Kasbon', '- ${CurrencyFormatter.format(kasbon)}', isNegative: true),
+                    if (denda == 0 && kasbon == 0)
+                      _buildRow('Tidak ada potongan bulan ini', 'Rp 0'),
+                  ],
+                ),
+              ),
+              pw.SizedBox(height: 18),
+
+              // Total Take Home Pay
+              pw.Container(
+                decoration: pw.BoxDecoration(
+                  color: PdfColors.green50,
+                  borderRadius: const pw.BorderRadius.all(pw.Radius.circular(6)),
+                  border: pw.Border.all(color: PdfColors.green300, width: 1.5),
+                ),
+                padding: const pw.EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                child: pw.Row(
+                  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                  children: [
+                    pw.Column(
+                      crossAxisAlignment: pw.CrossAxisAlignment.start,
+                      children: [
+                        pw.Text('TOTAL GAJI BERSIH DITERIMA', style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold, color: PdfColors.green900)),
+                        pw.Text('(Take Home Pay)', style: const pw.TextStyle(fontSize: 9, color: PdfColors.green700)),
+                      ],
+                    ),
+                    pw.Text(
+                      CurrencyFormatter.format(gajiBersih),
+                      style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold, color: PdfColors.green900),
+                    ),
+                  ],
+                ),
+              ),
+              pw.SizedBox(height: 24),
+
+              // Tanda Tangan
+              pw.Row(
+                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: pw.CrossAxisAlignment.start,
+                children: [
+                  pw.Column(
+                    children: [
+                      pw.Text('Penerima,', style: const pw.TextStyle(fontSize: 10)),
+                      pw.SizedBox(height: 48),
+                      pw.Text(capster.namaCapster, style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold)),
+                      pw.Container(height: 0.5, width: 100, color: PdfColors.grey600),
+                      pw.Text('Capster', style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey600)),
+                    ],
+                  ),
+                  pw.Column(
+                    children: [
+                      pw.Text('Pemilik / Manajemen,', style: const pw.TextStyle(fontSize: 10)),
+                      pw.SizedBox(height: 4),
+                      if (ttdImage != null)
+                        pw.Container(
+                          width: 80,
+                          height: 44,
+                          child: pw.Image(ttdImage),
+                        )
+                      else
+                        pw.SizedBox(height: 44),
+                      pw.Text('Garden Barbershop', style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold)),
+                      pw.Container(height: 0.5, width: 100, color: PdfColors.grey600),
+                      pw.Text('Authorized Signature', style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey600)),
+                    ],
+                  ),
+                ],
+              ),
+
+              pw.Spacer(),
+              pw.Divider(color: PdfColors.grey300),
+              pw.Row(
+                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                children: [
+                  pw.Text('Garden Barbershop Management System', style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey500)),
+                  pw.Text('Dicetak pada: ${DateTime.now().day}/${DateTime.now().month}/${DateTime.now().year}', style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey500)),
+                ],
+              ),
+            ],
+          );
+        },
+      ),
+    );
+
+    return await pdf.save();
+  }
+
+  static Future<void> generateSlipGajiPdf({
+    required String bulan,
+    required CapsterModel capster,
+    required int omzet,
+    required int persen,
+    required int gajiPokok,
+    required int bonus,
+    required int denda,
+    required int kasbon,
+    required int gajiBersih,
+  }) async {
+    final bytes = await buildSlipGajiPdfBytes(
+      bulan: bulan,
+      capster: capster,
+      omzet: omzet,
+      persen: persen,
+      gajiPokok: gajiPokok,
+      bonus: bonus,
+      denda: denda,
+      kasbon: kasbon,
+      gajiBersih: gajiBersih,
+    );
+    
+    try {
+      final tempDir = await getTemporaryDirectory();
+      final safeName = capster.namaCapster.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_');
+      final safeBulan = bulan.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_');
+      final filename = 'Slip_Gaji_${safeName}_$safeBulan.pdf';
+      final path = '${tempDir.path}/$filename';
+      
+      final file = File(path);
+      await file.writeAsBytes(bytes);
+      
+      final xFile = XFile(path, mimeType: 'application/pdf');
+      await Share.shareXFiles([xFile], subject: 'Slip Gaji ${capster.namaCapster} - $bulan');
+    } catch (_) {
+      await Printing.sharePdf(
+        bytes: bytes,
+        filename: 'Slip_Gaji_${capster.namaCapster.replaceAll(' ', '_')}_$bulan.pdf',
+      );
+    }
+  }
+
+  static pw.Widget _buildRow(String label, String value, {bool isPositive = false, bool isNegative = false}) {
+    PdfColor color = PdfColors.black;
+    if (isPositive) color = PdfColors.green700;
+    if (isNegative) color = PdfColors.red700;
+    
+    return pw.Padding(
+      padding: const pw.EdgeInsets.symmetric(vertical: 3),
+      child: pw.Row(
+        mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+        children: [
+          pw.Text(label, style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey800)),
+          pw.Text(value, style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold, color: color)),
+        ],
+      ),
     );
   }
 }

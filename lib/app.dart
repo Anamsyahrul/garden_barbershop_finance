@@ -4,15 +4,20 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'screens/buku_kas_screen.dart';
 import 'screens/akun_pengguna_screen.dart';
 import 'screens/capster_screen.dart';
+import 'screens/cabang_screen.dart';
 import 'screens/dashboard_screen.dart';
 import 'screens/laporan_screen.dart';
 import 'screens/layanan_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/operasional_screen.dart';
 import 'screens/kasbon_screen.dart';
+import 'screens/bonus_denda_screen.dart';
+import 'screens/inventaris_screen.dart';
 import 'screens/pendapatan_harian_screen.dart';
+import 'screens/pengaturan_screen.dart';
 import 'screens/notification_screen.dart';
 import 'screens/neraca_screen.dart';
+import 'screens/slip_gaji_screen.dart';
 import 'screens/splash_screen.dart';
 import 'services/auth_service.dart';
 import 'theme/app_theme.dart';
@@ -67,6 +72,14 @@ class GardenFinanceApp extends StatelessWidget {
               allowedRoles: [UserRole.admin, UserRole.pemilik],
               child: KasbonScreen(),
             ),
+        BonusDendaScreen.routeName: (_) => const RoleGuard(
+              allowedRoles: [UserRole.admin, UserRole.pemilik],
+              child: BonusDendaScreen(),
+            ),
+        InventarisScreen.routeName: (_) => const RoleGuard(
+              allowedRoles: [UserRole.admin, UserRole.pemilik],
+              child: InventarisScreen(),
+            ),
         LaporanScreen.routeName: (_) => const RoleGuard(
               allowedRoles: [
                 UserRole.admin,
@@ -79,6 +92,18 @@ class GardenFinanceApp extends StatelessWidget {
         NeracaScreen.routeName: (_) => const RoleGuard(
               allowedRoles: [UserRole.admin, UserRole.pemilik],
               child: NeracaScreen(),
+            ),
+        CabangScreen.routeName: (_) => const RoleGuard(
+              allowedRoles: [UserRole.admin, UserRole.pemilik],
+              child: CabangScreen(),
+            ),
+        PengaturanScreen.routeName: (_) => const RoleGuard(
+              allowedRoles: [UserRole.admin, UserRole.pemilik],
+              child: PengaturanScreen(),
+            ),
+        SlipGajiScreen.routeName: (_) => const RoleGuard(
+              allowedRoles: [UserRole.admin, UserRole.pemilik],
+              child: SlipGajiScreen(),
             ),
         NotificationScreen.routeName: (_) => const NotificationScreen(),
       },
