@@ -9,15 +9,49 @@ class AppPageHeader extends StatelessWidget {
     required this.title,
     required this.subtitle,
     required this.icon,
+    this.action,
   });
 
   final String title;
   final String subtitle;
   final IconData icon;
+  final Widget? action;
 
   @override
   Widget build(BuildContext context) {
-    return const SizedBox.shrink();
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Expanded(
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppColors.teal.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(icon, color: AppColors.teal),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(title, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppColors.navy)),
+                    Text(subtitle, style: const TextStyle(color: AppColors.muted)),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        if (action != null) ...[
+          const SizedBox(width: 16),
+          action!,
+        ],
+      ],
+    );
   }
 }
 
@@ -284,12 +318,14 @@ class AppSectionCard extends StatelessWidget {
     required this.title,
     this.subtitle,
     this.icon,
+    this.action,
     required this.children,
   });
 
   final String title;
   final String? subtitle;
   final IconData? icon;
+  final Widget? action;
   final List<Widget> children;
 
   @override
@@ -346,6 +382,10 @@ class AppSectionCard extends StatelessWidget {
                   ],
                 ),
               ),
+              if (action != null) ...[
+                const SizedBox(width: 16),
+                action!,
+              ],
             ],
           ),
           const SizedBox(height: 14),

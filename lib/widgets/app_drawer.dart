@@ -10,6 +10,8 @@ import '../screens/neraca_screen.dart';
 import '../screens/login_screen.dart';
 import '../screens/operasional_screen.dart';
 import '../screens/kasbon_screen.dart';
+import '../screens/bonus_denda_screen.dart';
+import '../screens/inventaris_screen.dart';
 import '../screens/pendapatan_harian_screen.dart';
 import '../services/auth_service.dart';
 import '../theme/app_theme.dart';
@@ -40,6 +42,8 @@ class AppDrawer extends StatelessWidget {
                       AkunPenggunaScreen.routeName),
                   _item(context, Icons.design_services_rounded, 'Data Layanan',
                       LayananScreen.routeName),
+                  _item(context, Icons.inventory_2_rounded, 'Inventaris Produk',
+                      InventarisScreen.routeName),
                   _item(context, Icons.payments_rounded, 'Pendapatan Harian',
                       PendapatanHarianScreen.routeName),
                   _item(context, Icons.account_balance_wallet_rounded,
@@ -48,6 +52,8 @@ class AppDrawer extends StatelessWidget {
                       OperasionalScreen.routeName),
                   _item(context, Icons.money_off_rounded, 'Kasbon Karyawan',
                       KasbonScreen.routeName),
+                  _item(context, Icons.monetization_on_rounded, 'Bonus / Denda',
+                      BonusDendaScreen.routeName),
                   _item(context, Icons.account_balance_rounded, 'Catatan Harta',
                       NeracaScreen.routeName),
                 ],
@@ -56,12 +62,16 @@ class AppDrawer extends StatelessWidget {
                       PendapatanHarianScreen.routeName),
                 ],
                 if (role == UserRole.pemilik) ...[
+                  _item(context, Icons.inventory_2_rounded, 'Inventaris Produk',
+                      InventarisScreen.routeName),
                   _item(context, Icons.account_balance_wallet_rounded,
                       'Buku Kas Umum', BukuKasScreen.routeName),
                   _item(context, Icons.receipt_long_rounded, 'Operasional',
                       OperasionalScreen.routeName),
                   _item(context, Icons.money_off_rounded, 'Kasbon Karyawan',
                       KasbonScreen.routeName),
+                  _item(context, Icons.monetization_on_rounded, 'Bonus / Denda',
+                      BonusDendaScreen.routeName),
                   _item(context, Icons.account_balance_rounded, 'Catatan Harta',
                       NeracaScreen.routeName),
                 ],
