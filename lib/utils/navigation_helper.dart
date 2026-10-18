@@ -35,6 +35,19 @@ class NavigationHelper {
       selectedIcon: Icons.bar_chart_rounded,
       label: 'Laporan',
     );
+    
+    final cabang = const NavItem(
+      route: '/cabang',
+      icon: Icons.store_outlined,
+      selectedIcon: Icons.store_rounded,
+      label: 'Cabang',
+    );
+    final pengaturan = const NavItem(
+      route: '/pengaturan',
+      icon: Icons.settings_outlined,
+      selectedIcon: Icons.settings_rounded,
+      label: 'Pengaturan',
+    );
     if (role == UserRole.capster) {
       return [home, laporan];
     }

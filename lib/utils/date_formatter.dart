@@ -100,6 +100,18 @@ class DateFormatter {
     return formatMonth(DateTime(year, month));
   }
 
+  static String displayMonthShort(String value) {
+    final key = toStorageMonth(value);
+    final parts = key.split('-');
+    if (parts.length != 2) return value;
+    final year = int.tryParse(parts[0]);
+    final month = int.tryParse(parts[1]);
+    if (year == null || month == null || month < 1 || month > 12) {
+      return value;
+    }
+    return '${_months[month - 1].substring(0, 3)} $year';
+  }
+
   static int? _monthIndex(String value) {
     final normalized = value.toLowerCase();
     for (var i = 0; i < _months.length; i++) {

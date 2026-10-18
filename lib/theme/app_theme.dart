@@ -13,6 +13,7 @@ class AppColors {
   static const aqua = Color(0xFFDAF8FF);
   static const brass = Color(0xFFE5A93B);
   static const brassSoft = Color(0xFFFFF5D8);
+  static const brassDark = Color(0xFFC08A27);
   static const linen = Color(0xFFF5F8F6);
   static const paper = Color(0xFFFFFFFF);
   static const line = Color(0xFFE1ECE8);

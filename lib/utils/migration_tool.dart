@@ -12,6 +12,27 @@ class MigrationTool {
       final pendapatanList = data['pendapatan'] as List;
       final operasionalList = data['operasional'] as List;
 
+      // Delete August data and onwards
+      try {
+        final existingPendapatan = await FirebaseService.instance.getPendapatanHarian();
+        for (var p in existingPendapatan) {
+          if (p.tanggal.startsWith('2026-08') || p.tanggal.startsWith('2026-09')) {
+            await FirebaseService.instance.deletePendapatanHarian(p);
+          }
+        }
+        
+        final existingOp = await FirebaseService.instance.getOperasionalByMonth('Agustus 2026');
+        for (var o in existingOp) {
+          await FirebaseService.instance.deleteOperasional(o);
+        }
+        final existingOpSep = await FirebaseService.instance.getOperasionalByMonth('September 2026');
+        for (var o in existingOpSep) {
+          await FirebaseService.instance.deleteOperasional(o);
+        }
+      } catch (e) {
+        print('Error deleting August data: $e');
+      }
+
       // Import Pendapatan
       for (var item in pendapatanList) {
         final map = item as Map<String, dynamic>;
